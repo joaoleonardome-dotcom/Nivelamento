@@ -1102,7 +1102,7 @@ async function save() {
 }
 
 // -------- STATE --------
-// state is initialized after Firebase load below
+let state = { students: { 6: [], 7: [], 8: [], 9: [] }, records: {} };
 
 let currentYear = 6;
 let currentDate = { 6: today(), 7: today(), 8: today(), 9: today() };
@@ -2186,6 +2186,19 @@ updateHeaderDate();
   renderAll();
   document.getElementById('fb-loading').style.display = 'none';
 })();
+
+// Expõe funções ao escopo global (necessário com type="module")
+Object.assign(window, {
+  switchTab, switchSubTab, setRgFilter,
+  openAddModal, confirmAddStudent, switchImportTab, downloadTemplate,
+  handleFileSelect, clearImport, confirmImport,
+  closeModal, openObsModal, saveObs,
+  openDeleteModal, confirmDelete,
+  openDetail,
+  setStatus, markAllPresent, markAllAbsent, clearChamada,
+  changeDate, filterStudents,
+  exportRelatorio, showToast
+});
 </script>
 </body>
 </html>
