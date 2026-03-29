@@ -1,0 +1,2191 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chamada — Nivelamento Escolar</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=DM+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  :root {
+    --bg: #f5f2ec;
+    --surface: #ffffff;
+    --surface2: #f0ede6;
+    --border: #e0d9ce;
+    --text: #1a1714;
+    --text-muted: #7a7168;
+    --accent: #2d5a3d;
+    --accent-light: #e8f2eb;
+    --accent2: #c4571a;
+    --accent2-light: #fdf0e8;
+    --present: #2d5a3d;
+    --present-bg: #e8f2eb;
+    --absent: #b83232;
+    --absent-bg: #fceaea;
+    --justified: #c4880a;
+    --justified-bg: #fdf6e3;
+    --shadow: 0 2px 12px rgba(26,23,20,0.08);
+    --shadow-lg: 0 8px 32px rgba(26,23,20,0.12);
+    --radius: 12px;
+    --radius-sm: 8px;
+
+    --6ano: #2d5a3d;
+    --7ano: #1d4d7a;
+    --8ano: #7a2d6b;
+    --9ano: #c4571a;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+  }
+
+  /* ---- HEADER ---- */
+  header {
+    background: var(--text);
+    color: #fff;
+    padding: 20px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    box-shadow: var(--shadow-lg);
+  }
+  header h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.5rem;
+    letter-spacing: -0.02em;
+  }
+  header span {
+    font-size: 0.8rem;
+    color: rgba(255,255,255,0.5);
+    font-weight: 300;
+  }
+  .header-date {
+    font-size: 0.85rem;
+    color: rgba(255,255,255,0.7);
+    text-align: right;
+  }
+
+  /* ---- LAYOUT ---- */
+  .main-container {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 32px 24px;
+  }
+
+  /* ---- TABS ---- */
+  .tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 28px;
+    flex-wrap: wrap;
+  }
+  .tab-btn {
+    padding: 10px 24px;
+    border: 2px solid var(--border);
+    background: var(--surface);
+    border-radius: 50px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    color: var(--text-muted);
+    transition: all 0.2s;
+  }
+  .tab-btn:hover { border-color: var(--text); color: var(--text); }
+  .tab-btn.active {
+    color: #fff;
+    border-color: transparent;
+  }
+  .tab-btn[data-year="6"].active { background: var(--6ano); }
+  .tab-btn[data-year="7"].active { background: var(--7ano); }
+  .tab-btn[data-year="8"].active { background: var(--8ano); }
+  .tab-btn[data-year="9"].active { background: var(--9ano); }
+
+  /* ---- YEAR PANEL ---- */
+  .year-panel { display: none; }
+  .year-panel.active { display: block; }
+
+  .panel-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+  .panel-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem;
+    letter-spacing: -0.03em;
+  }
+  .panel-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .btn {
+    padding: 9px 20px;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.85rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.18s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .btn-primary { background: var(--text); color: #fff; }
+  .btn-primary:hover { background: #333; }
+  .btn-success { background: var(--present); color: #fff; }
+  .btn-success:hover { opacity: 0.88; }
+  .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
+  .btn-outline:hover { border-color: var(--text); }
+  .btn-danger { background: var(--absent); color: #fff; }
+  .btn-danger:hover { opacity: 0.88; }
+
+  /* ---- CHAMADA SECTION ---- */
+  .chamada-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    margin-bottom: 28px;
+    box-shadow: var(--shadow);
+  }
+  .chamada-card h3 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    margin-bottom: 6px;
+    color: var(--text);
+  }
+  .chamada-meta {
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    margin-bottom: 18px;
+    flex-wrap: wrap;
+  }
+  .date-input {
+    padding: 8px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    background: var(--bg);
+    color: var(--text);
+    cursor: pointer;
+  }
+  .date-input:focus { outline: none; border-color: var(--text); }
+
+  .chamada-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 10px;
+    margin-bottom: 16px;
+  }
+  .chamada-item {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    transition: all 0.15s;
+  }
+  .chamada-item .student-name {
+    font-size: 0.88rem;
+    font-weight: 500;
+    flex: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .status-btn {
+    width: 30px; height: 30px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    cursor: pointer;
+    background: transparent;
+    transition: all 0.15s;
+    display: flex; align-items: center; justify-content: center;
+  }
+  .status-btn.P.active { background: var(--present-bg); border-color: var(--present); color: var(--present); }
+  .status-btn.F.active { background: var(--absent-bg); border-color: var(--absent); color: var(--absent); }
+  .status-btn.J.active { background: var(--justified-bg); border-color: var(--justified); color: var(--justified); }
+  .status-btn:hover:not(.active) { background: var(--bg); }
+
+  .chamada-summary {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    margin-top: 16px;
+    padding-top: 16px;
+    border-top: 1.5px dashed var(--border);
+    align-items: center;
+  }
+  .summary-chip {
+    padding: 5px 14px;
+    border-radius: 50px;
+    font-size: 0.8rem;
+    font-weight: 600;
+  }
+  .chip-p { background: var(--present-bg); color: var(--present); }
+  .chip-f { background: var(--absent-bg); color: var(--absent); }
+  .chip-j { background: var(--justified-bg); color: var(--justified); }
+  .chip-n { background: var(--surface2); color: var(--text-muted); }
+
+  /* ---- STUDENT LIST ---- */
+  .student-list-header {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    margin-bottom: 12px;
+    flex-wrap: wrap;
+  }
+  .search-input {
+    padding: 9px 16px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.88rem;
+    background: var(--surface);
+    color: var(--text);
+    width: 240px;
+  }
+  .search-input:focus { outline: none; border-color: var(--text); }
+
+  /* ---- STUDENT LIST (tabular) ---- */
+  .students-list-wrap {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .students-list-table {
+    width: 100%;
+    border-collapse: collapse;
+  }
+  .students-list-table thead tr {
+    background: var(--surface2);
+    border-bottom: 1.5px solid var(--border);
+  }
+  .students-list-table thead th {
+    padding: 10px 14px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    text-align: left;
+    white-space: nowrap;
+  }
+  .students-list-table thead th:last-child { text-align: right; }
+  .students-list-table tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.14s;
+    cursor: pointer;
+  }
+  .students-list-table tbody tr:last-child { border-bottom: none; }
+  .students-list-table tbody tr:hover { background: var(--bg); }
+  .students-list-table td {
+    padding: 11px 14px;
+    font-size: 0.88rem;
+    vertical-align: middle;
+  }
+  .sl-num {
+    font-size: 0.75rem;
+    font-weight: 700;
+    color: var(--text-muted);
+    width: 36px;
+    text-align: center;
+  }
+  .sl-initials {
+    width: 34px; height: 34px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.78rem; color: #fff;
+    flex-shrink: 0;
+  }
+  .sl-name { font-weight: 600; font-size: 0.9rem; }
+  .sl-meta { font-size: 0.78rem; color: var(--text-muted); margin-top: 1px; }
+  .sl-chips { display: flex; gap: 5px; flex-wrap: nowrap; align-items: center; }
+  .sl-freq {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    font-weight: 700;
+    text-align: center;
+  }
+  .sl-actions { display: flex; gap: 6px; justify-content: flex-end; }
+
+  .icon-btn {
+    width: 28px; height: 28px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    background: transparent;
+    cursor: pointer;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.8rem;
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .icon-btn:hover { background: var(--bg); color: var(--text); border-color: var(--text); }
+  .icon-btn.danger:hover { background: var(--absent-bg); color: var(--absent); border-color: var(--absent); }
+
+  .stat-mini {
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: 0.75rem;
+    font-weight: 600;
+  }
+  /* kept for backward compat */
+  .students-grid { display: flex; flex-direction: column; gap: 0; }
+
+  /* ---- MODAL ---- */
+  .modal-overlay {
+    position: fixed; inset: 0;
+    background: rgba(26,23,20,0.55);
+    z-index: 1000;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    backdrop-filter: blur(3px);
+  }
+  .modal-overlay.open { display: flex; }
+  .modal {
+    background: var(--surface);
+    border-radius: var(--radius);
+    width: 100%;
+    max-width: 640px;
+    max-height: 88vh;
+    overflow-y: auto;
+    box-shadow: var(--shadow-lg);
+    animation: slideUp 0.25s ease;
+  }
+  @keyframes slideUp {
+    from { transform: translateY(20px); opacity: 0; }
+    to   { transform: translateY(0);    opacity: 1; }
+  }
+  .modal-header {
+    padding: 24px 28px 0;
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .modal-header h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.4rem;
+  }
+  .close-btn {
+    background: none; border: none; cursor: pointer;
+    font-size: 1.2rem; color: var(--text-muted); padding: 2px 6px;
+    border-radius: 4px; transition: background 0.15s;
+  }
+  .close-btn:hover { background: var(--surface2); }
+  .modal-body { padding: 20px 28px 28px; }
+
+  .form-group { margin-bottom: 16px; }
+  .form-group label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+  .form-input {
+    width: 100%; padding: 10px 14px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.92rem; background: var(--bg); color: var(--text);
+  }
+  .form-input:focus { outline: none; border-color: var(--text); }
+  textarea.form-input { min-height: 90px; resize: vertical; }
+
+  .modal-footer {
+    padding: 0 28px 24px;
+    display: flex; gap: 10px; justify-content: flex-end;
+  }
+
+  /* ---- STUDENT DETAIL MODAL ---- */
+  .detail-hero {
+    display: flex; align-items: center; gap: 16px;
+    padding: 0 28px 20px;
+    border-bottom: 1.5px solid var(--border);
+    margin-bottom: 20px;
+  }
+  .detail-initials {
+    width: 60px; height: 60px;
+    border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 1.1rem; color: #fff;
+    flex-shrink: 0;
+  }
+  .detail-stats {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 12px;
+    margin-bottom: 20px;
+  }
+  .detail-stat-card {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 14px;
+    text-align: center;
+  }
+  .detail-stat-card .num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.8rem;
+    display: block;
+  }
+  .detail-stat-card .lbl { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
+
+  .section-title {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.07em;
+    color: var(--text-muted);
+    margin-bottom: 10px;
+    margin-top: 20px;
+  }
+  .absence-list { display: flex; flex-direction: column; gap: 6px; }
+  .absence-item {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 8px 14px;
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+  }
+  .absence-item .date { font-weight: 600; }
+  .absence-item .type-badge {
+    padding: 2px 10px; border-radius: 50px; font-size: 0.75rem; font-weight: 700;
+  }
+  .badge-F { background: var(--absent-bg); color: var(--absent); }
+  .badge-J { background: var(--justified-bg); color: var(--justified); }
+
+  .obs-list { display: flex; flex-direction: column; gap: 8px; }
+  .obs-item {
+    padding: 10px 14px;
+    background: var(--surface2);
+    border-left: 3px solid var(--border);
+    border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
+    font-size: 0.85rem;
+    line-height: 1.5;
+  }
+  .obs-item .obs-date { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 3px; font-weight: 600; }
+
+  .empty-state {
+    text-align: center; padding: 40px 20px;
+    color: var(--text-muted); font-size: 0.9rem;
+  }
+  .empty-state .icon { font-size: 2rem; margin-bottom: 8px; }
+
+  /* ---- OBS MODAL ---- */
+  .obs-history { max-height: 160px; overflow-y: auto; margin-bottom: 14px; }
+
+  /* ---- TOAST ---- */
+  .toast {
+    position: fixed; bottom: 28px; right: 28px;
+    background: var(--text); color: #fff;
+    padding: 12px 22px; border-radius: var(--radius-sm);
+    font-size: 0.88rem; font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    z-index: 2000;
+    transform: translateY(80px); opacity: 0;
+    transition: all 0.3s;
+  }
+  .toast.show { transform: translateY(0); opacity: 1; }
+
+  /* ---- RESPONSIVE ---- */
+  @media (max-width: 600px) {
+    .main-container { padding: 20px 14px; }
+    .detail-stats { grid-template-columns: repeat(3,1fr); }
+  }
+
+  /* ---- IMPORT EXCEL ---- */
+  .import-tabs { display: flex; border-bottom: 1.5px solid var(--border); margin-bottom: 20px; }
+  .import-tab {
+    padding: 10px 20px; background: none; border: none;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 500;
+    cursor: pointer; color: var(--text-muted);
+    border-bottom: 2.5px solid transparent; margin-bottom: -1.5px;
+    transition: all 0.15s;
+  }
+  .import-tab.active { color: var(--text); border-bottom-color: var(--text); }
+  .import-pane { display: none; }
+  .import-pane.active { display: block; }
+
+  .drop-zone {
+    border: 2px dashed var(--border);
+    border-radius: var(--radius);
+    padding: 36px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: all 0.2s;
+    background: var(--bg);
+    position: relative;
+  }
+  .drop-zone:hover, .drop-zone.drag-over {
+    border-color: var(--text);
+    background: var(--surface2);
+  }
+  .drop-zone input[type=file] {
+    position: absolute; inset: 0; opacity: 0; cursor: pointer; width: 100%; height: 100%;
+  }
+  .drop-zone .dz-icon { font-size: 2.2rem; margin-bottom: 8px; display: block; }
+  .drop-zone .dz-title { font-weight: 600; margin-bottom: 4px; }
+  .drop-zone .dz-sub { font-size: 0.8rem; color: var(--text-muted); }
+
+  .template-banner {
+    display: flex; align-items: center; justify-content: space-between;
+    background: var(--accent-light); border: 1.5px solid #b8d9c4;
+    border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 18px; gap: 12px;
+  }
+  .template-banner span { font-size: 0.85rem; color: var(--present); flex: 1; }
+  .btn-excel {
+    background: #1d6f42; color: #fff; padding: 7px 16px;
+    border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; border: none; white-space: nowrap; font-family: 'DM Sans', sans-serif;
+    display: flex; align-items: center; gap: 6px; transition: opacity 0.15s;
+  }
+  .btn-excel:hover { opacity: 0.88; }
+
+  .preview-table-wrap {
+    max-height: 240px; overflow-y: auto;
+    border: 1.5px solid var(--border); border-radius: var(--radius-sm);
+    margin: 14px 0;
+  }
+  .preview-table { width: 100%; border-collapse: collapse; font-size: 0.83rem; }
+  .preview-table th {
+    background: var(--surface2); padding: 8px 12px; text-align: left;
+    font-size: 0.75rem; text-transform: uppercase; letter-spacing: 0.05em;
+    color: var(--text-muted); position: sticky; top: 0;
+  }
+  .preview-table td { padding: 7px 12px; border-top: 1px solid var(--border); }
+  .preview-table tr:hover td { background: var(--bg); }
+  .preview-row-err td { background: #fdf0f0 !important; color: var(--absent); }
+
+  .import-result {
+    padding: 10px 14px; border-radius: var(--radius-sm); font-size: 0.85rem; font-weight: 500;
+    margin-top: 10px;
+  }
+  .import-result.ok { background: var(--present-bg); color: var(--present); }
+  .import-result.warn { background: var(--justified-bg); color: var(--justified); }
+  .import-result.err { background: var(--absent-bg); color: var(--absent); }
+
+
+
+  /* ---- CHAMADA DUAS COLUNAS ---- */
+  .chamada-cols {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+  @media (max-width: 860px) { .chamada-cols { grid-template-columns: 1fr; } }
+
+  .chamada-col-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 8px 14px 8px 16px;
+    border-radius: var(--radius-sm);
+    margin-bottom: 10px;
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .chamada-col-header .col-count {
+    margin-left: auto;
+    font-weight: 600;
+    font-size: 0.75rem;
+    opacity: 0.75;
+  }
+  .chamada-col-conv .chamada-col-header  { background: var(--surface2); color: var(--text); }
+  .chamada-col-nao  .chamada-col-header  { color: var(--text-muted); background: var(--bg); border: 1px dashed var(--border); }
+
+  .rg-filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  .rg-filter-bar span { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-right: 4px; }
+  .rg-filter-btn {
+    padding: 6px 18px; border: 1.5px solid var(--border); border-radius: 50px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; background: var(--surface); color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .rg-filter-btn:hover { border-color: var(--text); color: var(--text); }
+  .rg-filter-btn.active { background: var(--text); color: #fff; border-color: transparent; }
+
+  /* ---- REGISTRO GERAL ---- */
+  .rg-wrap {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    box-shadow: var(--shadow);
+    overflow: hidden;
+    margin-bottom: 18px;
+  }
+  .rg-scroll {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 70vh;
+  }
+  .rg-table {
+    border-collapse: collapse;
+    font-size: 0.82rem;
+    min-width: 100%;
+    table-layout: auto;
+  }
+  .rg-table thead {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+  }
+  .rg-table thead tr:first-child th {
+    background: var(--text);
+    color: #fff;
+    padding: 8px 10px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    white-space: nowrap;
+    border-right: 1px solid rgba(255,255,255,0.12);
+  }
+  .rg-table thead tr:first-child th.rg-month {
+    text-align: center;
+    background: #2a2420;
+  }
+  .rg-table thead tr:second-child th,
+  .rg-table thead tr:nth-child(2) th {
+    background: #3a3530;
+    color: #e0d9ce;
+    padding: 5px 6px;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-align: center;
+    border-right: 1px solid rgba(255,255,255,0.10);
+    white-space: nowrap;
+  }
+  .rg-table thead tr:nth-child(2) th.rg-type-header {
+    font-size: 0.6rem;
+    font-weight: 500;
+    color: rgba(255,255,255,0.45);
+    letter-spacing: 0;
+    padding: 3px 4px;
+  }
+  /* frozen columns */
+  .rg-table th.rg-fixed,
+  .rg-table td.rg-fixed {
+    position: sticky;
+    background: inherit;
+    z-index: 2;
+  }
+  .rg-table th.rg-fixed-0, .rg-table td.rg-fixed-0 { left: 0; min-width: 28px; max-width: 28px; text-align: center; }
+  .rg-table th.rg-fixed-1, .rg-table td.rg-fixed-1 { left: 28px; min-width: 108px; max-width: 132px; }
+  .rg-table th.rg-fixed-2, .rg-table td.rg-fixed-2 { left: 136px; min-width: 52px; max-width: 52px; text-align: center; }
+  /* shadow after last fixed col (now fixed-2) */
+  .rg-table th.rg-fixed-2, .rg-table td.rg-fixed-2 {
+    box-shadow: 3px 0 6px rgba(26,23,20,0.10);
+  }
+  /* thead fixed cells */
+  .rg-table thead th.rg-fixed {
+    background: var(--text) !important;
+    z-index: 5;
+  }
+  .rg-table thead tr:nth-child(2) th.rg-fixed {
+    background: #3a3530 !important;
+    z-index: 5;
+  }
+  /* body rows */
+  .rg-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
+  .rg-table tbody tr:hover { background: var(--bg) !important; }
+  .rg-table tbody tr:hover td.rg-fixed { background: var(--bg) !important; }
+  .rg-table tbody tr:last-child { border-bottom: none; }
+  .rg-table tbody td {
+    padding: 7px 5px;
+    text-align: center;
+    border-right: 1px solid var(--border);
+    vertical-align: middle;
+    white-space: nowrap;
+  }
+  .rg-table tbody td.rg-fixed-0 { font-size: 0.72rem; font-weight: 700; color: var(--text-muted); }
+  .rg-table tbody td.rg-fixed-1 {
+    text-align: left;
+    padding-left: 10px;
+    font-weight: 500;
+    font-size: 0.85rem;
+    background: var(--surface);
+    overflow: hidden; text-overflow: ellipsis; max-width: 220px;
+  }
+  .rg-table tbody td.rg-fixed-2 { font-size: 0.75rem; color: var(--text-muted); background: var(--surface); }
+  /* status cells */
+  .rg-cell-P { background: #e8f2eb; color: var(--present); font-weight: 700; font-size: 0.78rem; }
+  .rg-cell-F { background: #fceaea; color: var(--absent);  font-weight: 700; font-size: 0.78rem; }
+  .rg-cell-J { background: #fdf6e3; color: var(--justified); font-weight: 700; font-size: 0.78rem; }
+  .rg-cell-empty { color: var(--border); font-size: 0.7rem; }
+  /* summary totals column */
+  .rg-totals-wrap { display: flex; gap: 3px; justify-content: center; align-items: center; }
+  .rg-tot { font-size: 0.7rem; font-weight: 700; padding: 2px 6px; border-radius: 50px; }
+  .rg-tot-p { background: var(--present-bg); color: var(--present); }
+  .rg-tot-f { background: var(--absent-bg);  color: var(--absent); }
+  .rg-tot-j { background: var(--justified-bg); color: var(--justified); }
+  /* nao-convocado row tint */
+  .rg-row-nao td.rg-fixed-1 { color: var(--text-muted); }
+  /* alternating subtle stripe */
+  .rg-table tbody tr:nth-child(even) { background: #fbf9f6; }
+  .rg-table tbody tr:nth-child(even) td.rg-fixed-1,
+  .rg-table tbody tr:nth-child(even) td.rg-fixed-2 { background: #fbf9f6; }
+  /* month group separator */
+  .rg-table td.rg-month-sep, .rg-table th.rg-month-sep { border-left: 2px solid rgba(255,255,255,0.25); }
+  .rg-table tbody td.rg-month-sep { border-left: 2px solid var(--border); }
+  /* legend */
+  .rg-legend { display: flex; gap: 14px; padding: 10px 16px; border-top: 1.5px solid var(--border); flex-wrap: wrap; align-items: center; }
+  .rg-legend span { font-size: 0.75rem; font-weight: 600; padding: 2px 10px; border-radius: 50px; }
+  .rg-empty { text-align: center; padding: 32px 20px; color: var(--text-muted); font-size: 0.88rem; }
+
+  /* ---- RESUMO TAB ---- */
+  .resumo-layout {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 18px;
+    margin-bottom: 18px;
+  }
+  @media (max-width: 780px) { .resumo-layout { grid-template-columns: 1fr; } }
+
+  .resumo-card {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 20px 22px;
+    box-shadow: var(--shadow);
+  }
+  .resumo-card h4 {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1rem;
+    margin-bottom: 14px;
+    color: var(--text);
+  }
+  .kpi-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 10px;
+    margin-bottom: 18px;
+  }
+  .kpi-box {
+    background: var(--surface2);
+    border-radius: var(--radius-sm);
+    padding: 12px 8px;
+    text-align: center;
+  }
+  .kpi-box .kpi-num {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.6rem;
+    display: block;
+    line-height: 1;
+  }
+  .kpi-box .kpi-lbl {
+    font-size: 0.7rem;
+    color: var(--text-muted);
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-top: 4px;
+    display: block;
+  }
+  .chart-wrap { position: relative; height: 180px; }
+  .donut-wrap { position: relative; height: 160px; display: flex; align-items: center; justify-content: center; }
+
+  .alert-list { display: flex; flex-direction: column; gap: 8px; }
+  .alert-item {
+    display: flex; align-items: center; gap: 12px;
+    padding: 10px 14px;
+    background: var(--absent-bg);
+    border: 1px solid #f5c6c6;
+    border-left: 4px solid var(--absent);
+    border-radius: var(--radius-sm);
+    font-size: 0.85rem;
+  }
+  .alert-item .alert-name { font-weight: 600; flex: 1; }
+  .alert-item .alert-count { color: var(--absent); font-weight: 700; font-size: 0.9rem; white-space: nowrap; }
+  .alert-empty {
+    text-align: center; padding: 24px 16px;
+    color: var(--present); font-size: 0.88rem; font-weight: 500;
+    background: var(--present-bg); border-radius: var(--radius-sm);
+  }
+  .legend-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; justify-content: center; }
+  .legend-dot { display: flex; align-items: center; gap: 5px; font-size: 0.78rem; color: var(--text-muted); font-weight: 500; }
+  .legend-dot span { width: 10px; height: 10px; border-radius: 50%; display: inline-block; }
+
+  /* ---- CONVOCADO TOGGLE ---- */
+  .convocado-toggle { display: flex; gap: 0; border: 1.5px solid var(--border); border-radius: var(--radius-sm); overflow: hidden; width: 100%; }
+  .convocado-toggle input[type=radio] { display: none; }
+  .convocado-toggle label {
+    flex: 1; text-align: center; padding: 9px 12px; cursor: pointer;
+    font-size: 0.85rem; font-weight: 600; transition: all 0.15s;
+    color: var(--text-muted); background: var(--bg); user-select: none;
+  }
+  .convocado-toggle label:first-of-type { border-right: 1px solid var(--border); }
+  #convocadoSim:checked ~ label[for=convocadoSim],
+  .convocado-toggle input#convocadoSim:checked + label {
+    background: #1d4d7a; color: #fff;
+  }
+  #convocadoNao:checked ~ label[for=convocadoNao] { background: var(--surface2); color: var(--text); }
+  .conv-sim:checked + label { background: #1d4d7a !important; color: #fff !important; }
+  .conv-nao:checked + label { background: var(--surface2) !important; color: var(--text) !important; }
+
+  .badge-conv-sim { background: #ddeaf8; color: #1d4d7a; }
+  .badge-conv-nao { background: var(--surface2); color: var(--text-muted); }
+
+  /* ---- SUB-TABS (Chamada / Alunos) ---- */
+  .sub-tabs {
+    display: flex;
+    gap: 4px;
+    background: var(--surface2);
+    border-radius: 10px;
+    padding: 4px;
+    margin-bottom: 22px;
+    width: fit-content;
+  }
+  .sub-tab {
+    padding: 8px 22px;
+    border: none; border-radius: 7px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 600;
+    cursor: pointer; color: var(--text-muted); background: transparent;
+    transition: all 0.18s;
+  }
+  .sub-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 6px rgba(26,23,20,0.10); }
+
+  /* ---- CHAMADA LIST (row format) ---- */
+  .chamada-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
+  .chamada-row {
+    display: flex; align-items: center;
+    padding: 10px 16px;
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius-sm);
+    gap: 14px;
+    transition: border-color 0.15s;
+  }
+  .chamada-row:hover { border-color: #c8c0b4; }
+  .chamada-row.status-P { border-left: 3.5px solid var(--present); }
+  .chamada-row.status-F { border-left: 3.5px solid var(--absent); }
+  .chamada-row.status-J { border-left: 3.5px solid var(--justified); }
+  .chamada-row .row-num {
+    font-size: 0.75rem; font-weight: 700; color: var(--text-muted);
+    min-width: 22px; text-align: right;
+  }
+  .chamada-row .row-name {
+    flex: 1; font-size: 0.9rem; font-weight: 500;
+    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  }
+  .chamada-row .row-meta {
+    font-size: 0.75rem; color: var(--text-muted); white-space: nowrap;
+  }
+  /* placeholder invisível para manter P alinhado nas linhas sem F e J */
+  .status-btn-placeholder {
+    width: 30px; height: 30px;
+    flex-shrink: 0;
+    display: inline-block;
+  }
+  /* largura fixa para alinhar botões em todas as linhas */
+  .status-btns {
+    display: flex; gap: 5px;
+    min-width: 104px;
+    justify-content: flex-end;
+    flex-shrink: 0;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div>
+    <h1>📚 Chamada — Nivelamento</h1>
+    <span>Sistema de Controle de Presença</span>
+  </div>
+  <div class="header-date" id="headerDate"></div>
+</header>
+
+<div class="main-container">
+  <div class="tabs">
+    <button class="tab-btn active" data-year="6" onclick="switchTab(6)">6º Ano</button>
+    <button class="tab-btn" data-year="7" onclick="switchTab(7)">7º Ano</button>
+    <button class="tab-btn" data-year="8" onclick="switchTab(8)">8º Ano</button>
+    <button class="tab-btn" data-year="9" onclick="switchTab(9)">9º Ano</button>
+  </div>
+
+  <div id="panel-6" class="year-panel active"></div>
+  <div id="panel-7" class="year-panel"></div>
+  <div id="panel-8" class="year-panel"></div>
+  <div id="panel-9" class="year-panel"></div>
+</div>
+
+<!-- MODAL: Adicionar Aluno -->
+<div class="modal-overlay" id="modalAdd">
+  <div class="modal" style="max-width:560px;">
+    <div class="modal-header">
+      <h2>Adicionar Alunos</h2>
+      <button class="close-btn" onclick="closeModal('modalAdd')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="import-tabs">
+        <button class="import-tab active" onclick="switchImportTab('manual')">✏️ Manual</button>
+        <button class="import-tab" onclick="switchImportTab('excel')">📊 Importar Excel</button>
+      </div>
+
+      <!-- PANE: Manual -->
+      <div class="import-pane active" id="pane-manual">
+        <div class="form-group">
+          <label>Nome Completo</label>
+          <input class="form-input" id="addName" type="text" placeholder="Ex: João da Silva">
+        </div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+          <div class="form-group" style="margin-bottom:0;">
+            <label>Série</label>
+            <select class="form-input" id="addSerie">
+              <option value="">— Selecione —</option>
+              <option value="6º Ano">6º Ano</option>
+              <option value="7º Ano">7º Ano</option>
+              <option value="8º Ano">8º Ano</option>
+              <option value="9º Ano">9º Ano</option>
+            </select>
+          </div>
+          <div class="form-group" style="margin-bottom:0;">
+            <label>Turma</label>
+            <input class="form-input" id="addTurma" type="text" placeholder="Ex: A, B, 301...">
+          </div>
+        </div>
+        <div class="form-group" style="margin-top:16px;">
+          <label>Situação de Convocação</label>
+          <div class="convocado-toggle">
+            <input type="radio" name="addConvocado" id="convocadoSim" class="conv-sim" value="sim" checked>
+            <label for="convocadoSim" style="border-right:1px solid var(--border)">🔔 Convocado</label>
+            <input type="radio" name="addConvocado" id="convocadoNao" class="conv-nao" value="nao">
+            <label for="convocadoNao">Não Convocado</label>
+          </div>
+        </div>
+        <div class="modal-footer" style="padding:0;justify-content:flex-end;display:flex;gap:10px;margin-top:4px;">
+          <button class="btn btn-outline" onclick="closeModal('modalAdd')">Cancelar</button>
+          <button class="btn btn-primary" onclick="confirmAddStudent()">Adicionar</button>
+        </div>
+      </div>
+
+      <!-- PANE: Excel -->
+      <div class="import-pane" id="pane-excel">
+        <div class="template-banner">
+          <span>📥 Baixe o modelo, preencha e importe — é rápido!</span>
+          <button class="btn-excel" onclick="downloadTemplate()">⬇ Modelo .xlsx</button>
+        </div>
+
+        <div class="drop-zone" id="dropZone">
+          <input type="file" accept=".xlsx,.xls,.csv" id="excelFileInput" onchange="handleFileSelect(this)">
+          <span class="dz-icon">📂</span>
+          <div class="dz-title">Arraste o arquivo aqui</div>
+          <div class="dz-sub">ou clique para selecionar · .xlsx, .xls, .csv</div>
+        </div>
+
+        <div id="importPreview" style="display:none;">
+          <div id="importResult" class="import-result"></div>
+          <div class="preview-table-wrap">
+            <table class="preview-table">
+              <thead><tr><th>#</th><th>Nome</th><th>Série</th><th>Turma</th><th>Convocado</th><th>Status</th></tr></thead>
+              <tbody id="previewBody"></tbody>
+            </table>
+          </div>
+          <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:10px;">
+            <button class="btn btn-outline" onclick="clearImport()">Limpar</button>
+            <button class="btn btn-primary" id="btnConfirmImport" onclick="confirmImport()">Importar válidos</button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Observação -->
+<div class="modal-overlay" id="modalObs">
+  <div class="modal">
+    <div class="modal-header">
+      <h2>Observações</h2>
+      <button class="close-btn" onclick="closeModal('modalObs')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div id="obsStudentName" style="font-weight:600;margin-bottom:14px;font-size:1rem;"></div>
+      <div class="obs-history" id="obsHistory"></div>
+      <div class="form-group">
+        <label>Nova Observação</label>
+        <textarea class="form-input" id="obsText" placeholder="Digite a observação..."></textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalObs')">Fechar</button>
+      <button class="btn btn-primary" onclick="saveObs()">Salvar</button>
+    </div>
+  </div>
+</div>
+
+<!-- MODAL: Detalhes do Aluno -->
+<div class="modal-overlay" id="modalDetail">
+  <div class="modal">
+    <div class="modal-header" style="padding-bottom:16px;">
+      <h2 id="detailTitle">Detalhes</h2>
+      <button class="close-btn" onclick="closeModal('modalDetail')">✕</button>
+    </div>
+    <div class="modal-body" id="detailBody"></div>
+  </div>
+</div>
+
+<!-- MODAL: Confirmar Remoção -->
+<div class="modal-overlay" id="modalDelete">
+  <div class="modal" style="max-width:400px;">
+    <div class="modal-header">
+      <h2>Remover Aluno</h2>
+      <button class="close-btn" onclick="closeModal('modalDelete')">✕</button>
+    </div>
+    <div class="modal-body">
+      <p>Tem certeza que deseja remover <strong id="deleteStudentName"></strong>? Todos os dados serão perdidos.</p>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalDelete')">Cancelar</button>
+      <button class="btn btn-danger" onclick="confirmDelete()">Remover</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<!-- Firebase loading overlay -->
+<div id="fb-loading" style="position:fixed;inset:0;background:rgba(245,242,236,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;">
+  <div style="font-size:2rem;">&#x1F4DA;</div>
+  <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:#1a1714;">Carregando dados...</div>
+  <div style="font-size:0.82rem;color:#7a7168;">Conectando ao banco de dados</div>
+</div>
+
+<script type="module">
+import { initializeApp }                     from "https://www.gstatic.com/firebasejs/12.11.0/firebase-app.js";
+import { getFirestore, doc, getDoc, setDoc } from "https://www.gstatic.com/firebasejs/12.11.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey:            "AIzaSyBmdPG0kxj2ZsOLGPjsAIKQubx4nxWYHSg",
+  authDomain:        "nivelamento-e9344.firebaseapp.com",
+  databaseURL:       "https://nivelamento-e9344-default-rtdb.firebaseio.com",
+  projectId:         "nivelamento-e9344",
+  storageBucket:     "nivelamento-e9344.firebasestorage.app",
+  messagingSenderId: "1005771488402",
+  appId:             "1:1005771488402:web:0789d5b350f3b5c4fb3a4b"
+};
+
+const fbApp     = initializeApp(firebaseConfig);
+const db        = getFirestore(fbApp);
+const STATE_DOC = doc(db, 'chamada', 'estado');
+
+let _saveTimer = null;
+async function save() {
+  clearTimeout(_saveTimer);
+  _saveTimer = setTimeout(async () => {
+    try {
+      await setDoc(STATE_DOC, { students: state.students, records: state.records });
+    } catch(e) {
+      console.error('Erro ao salvar:', e);
+      showToast('\u26a0 Erro ao salvar. Verifique a conexao.');
+    }
+  }, 600);
+}
+
+// -------- STATE --------
+// state is initialized after Firebase load below
+
+let currentYear = 6;
+let currentDate = { 6: today(), 7: today(), 8: today(), 9: today() };
+let pendingObs = null;
+let pendingDelete = null;
+let addTargetYear = null;
+
+function today() {
+  return new Date().toISOString().split('T')[0];
+}
+
+// save() is defined above as async Firebase function
+
+function uid() {
+  return Date.now().toString(36) + Math.random().toString(36).substr(2,5);
+}
+
+function initials(name) {
+  return name.trim().split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
+}
+
+const yearColors   = { 6: '#2d5a3d', 7: '#1d4d7a', 8: '#7a2d6b', 9: '#c4571a' };
+const yearNames    = { 6: '6º Ano', 7: '7º Ano', 8: '8º Ano', 9: '9º Ano' };
+// Very light tint used for "não convocado" rows in chamada
+const yearNaoBg    = { 6: '#edf7f0', 7: '#e8f0f8', 8: '#f5eaf4', 9: '#fdf0e8' };
+
+function sortStudents(year) {
+  state.students[year].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
+}
+
+function buildRow(s, globalIdx, year, date, isNao) {
+  const key = `${date}_${year}_${s.id}`;
+  const status = state.records[key] || '';
+  const naoBg = isNao ? `background:${yearNaoBg[year]};` : '';
+  const btns = isNao
+    ? `<button class="status-btn P ${status==='P'?'active':''}" onclick="setStatus(${year},'${s.id}','P')" title="Presente">P</button>
+       <span class="status-btn-placeholder"></span>
+       <span class="status-btn-placeholder"></span>`
+    : `<button class="status-btn P ${status==='P'?'active':''}" onclick="setStatus(${year},'${s.id}','P')" title="Presente">P</button>
+       <button class="status-btn F ${status==='F'?'active':''}" onclick="setStatus(${year},'${s.id}','F')" title="Falta">F</button>
+       <button class="status-btn J ${status==='J'?'active':''}" onclick="setStatus(${year},'${s.id}','J')" title="Justificado">J</button>`;
+  return `
+  <div class="chamada-row status-${status}" style="${naoBg}">
+    <span class="row-num">${globalIdx + 1}</span>
+    <span class="row-name">${s.name}</span>
+    ${s.serie || s.turma ? `<span class="row-meta">${s.serie||''}${s.turma ? ' – '+s.turma : ''}</span>` : ''}
+    <div class="status-btns">${btns}</div>
+  </div>`;
+}
+
+// -------- RENDER --------
+function renderAll() {
+  [6,7,8,9].forEach(y => renderPanel(y));
+}
+
+let activeSubTab = { 6: 'chamada', 7: 'chamada', 8: 'chamada', 9: 'chamada' };
+let rgFilter = { 6: 'conv', 7: 'conv', 8: 'conv', 9: 'conv' }; // 'conv' | 'nao' | 'todos'
+
+function switchSubTab(year, tab) {
+  activeSubTab[year] = tab;
+  renderPanel(year);
+}
+
+function setRgFilter(year, val) {
+  rgFilter[year] = val;
+  renderPanel(year);
+}
+
+function renderPanel(year) {
+  const panel = document.getElementById(`panel-${year}`);
+  const students = state.students[year];
+  const date = currentDate[year];
+  const color = yearColors[year];
+  const sub = activeSubTab[year];
+
+  let P=0, F=0, J=0, N=0;
+  students.forEach(s => {
+    const key = `${date}_${year}_${s.id}`;
+    const status = state.records[key];
+    if (status === 'P') P++;
+    else if (status === 'F') F++;
+    else if (status === 'J') J++;
+    else if (s.convocado !== 'nao') N++; // só convocados entram como "não marcados"
+  });
+
+  const convocados   = students.filter(s => s.convocado !== 'nao');
+  const naoConvocados = students.filter(s => s.convocado === 'nao');
+
+  // Build sequential global index preserving alphabetical order
+  const globalIdx = new Map(students.map((s, i) => [s.id, i]));
+
+  const colConv = convocados.length === 0
+    ? `<div class="empty-state" style="padding:24px 0;font-size:0.85rem;">Nenhum aluno convocado.</div>`
+    : convocados.map(s => buildRow(s, globalIdx.get(s.id), year, date, false)).join('');
+
+  const colNao = naoConvocados.length === 0
+    ? `<div class="empty-state" style="padding:24px 0;font-size:0.85rem;">Nenhum aluno não convocado.</div>`
+    : naoConvocados.map(s => buildRow(s, globalIdx.get(s.id), year, date, true)).join('');
+
+  const chamadaContent = students.length === 0
+    ? `<div class="empty-state"><div class="icon">👤</div>Nenhum aluno cadastrado.<br>Clique em <strong>+ Aluno</strong> para começar.</div>`
+    : `
+    <div class="chamada-cols">
+      <div class="chamada-col chamada-col-conv">
+        <div class="chamada-col-header">
+          🔔 Convocados
+          <span class="col-count">${convocados.length} aluno(s)</span>
+        </div>
+        <div class="chamada-list">${colConv}</div>
+      </div>
+      <div class="chamada-col chamada-col-nao">
+        <div class="chamada-col-header">
+          Não Convocados
+          <span class="col-count">${naoConvocados.length} aluno(s)</span>
+        </div>
+        <div class="chamada-list">${colNao}</div>
+      </div>
+    </div>
+    <div class="chamada-summary">
+      <span class="summary-chip chip-p">✓ Presentes: ${P}</span>
+      <span class="summary-chip chip-f">✗ Faltas: ${F}</span>
+      <span class="summary-chip chip-j">⚠ Justif.: ${J}</span>
+      <span class="summary-chip chip-n">— Não marcados (conv.): ${N}</span>
+    </div>`;
+
+  panel.innerHTML = `
+    <div class="panel-header">
+      <div class="panel-title" style="color:${color}">${yearNames[year]}</div>
+      <div class="panel-actions">
+        <button class="btn btn-outline" onclick="openAddModal(${year})">＋ Aluno</button>
+        <button class="btn btn-success" onclick="markAllPresent(${year})">✓ Todos Presentes</button>
+        <button class="btn btn-danger" onclick="markAllAbsent(${year})">✗ Todos Ausentes</button>
+        <button class="btn btn-outline" onclick="clearChamada(${year})" title="Limpar todos os registros do dia">🗑 Limpar Chamada</button>
+        <button class="btn" style="background:#1d4d7a;color:#fff;" onclick="exportRelatorio(${year})" title="Exportar relatório Excel">📊 Exportar Relatório</button>
+      </div>
+    </div>
+
+    <div class="sub-tabs">
+      <button class="sub-tab ${sub==='chamada'?'active':''}" onclick="switchSubTab(${year},'chamada')">📋 Chamada do Dia</button>
+      <button class="sub-tab ${sub==='resumo'?'active':''}"  onclick="switchSubTab(${year},'resumo')">📊 Resumo</button>
+      <button class="sub-tab ${sub==='alunos'?'active':''}"  onclick="switchSubTab(${year},'alunos')">👥 Alunos Cadastrados</button>
+      <button class="sub-tab ${sub==='registro'?'active':''}" onclick="switchSubTab(${year},'registro')">📅 Registro Geral</button>
+    </div>
+
+    ${sub === 'chamada' ? `
+    <div class="chamada-card">
+      <div class="chamada-meta" style="margin-bottom:18px;">
+        <input type="date" class="date-input" value="${date}" onchange="changeDate(${year}, this.value)">
+        <span style="font-size:0.82rem;color:var(--text-muted)">${students.length} aluno(s)</span>
+      </div>
+      ${chamadaContent}
+    </div>` : sub === 'resumo' ? renderResumo(year) : sub === 'registro' ? renderRegistroGeral(year) : `
+    <div class="student-list-header">
+      <span style="font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted)">Alunos Cadastrados</span>
+      <input type="text" class="search-input" placeholder="🔍 Buscar aluno..." onInput="filterStudents(${year}, this.value)" id="search-${year}">
+    </div>
+    <div class="students-list-wrap">
+      <table class="students-list-table">
+        <thead>
+          <tr>
+            <th style="width:36px;">#</th>
+            <th></th>
+            <th>Nome</th>
+            <th>Série / Turma</th>
+            <th>Convocação</th>
+            <th>Presenças</th>
+            <th>Faltas</th>
+            <th>Justif.</th>
+            <th>Frequência</th>
+            <th>Obs.</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="students-grid-${year}">
+          ${renderStudentCards(year, students)}
+        </tbody>
+      </table>
+    </div>`}
+  `;
+}
+
+function renderStudentCards(year, students) {
+  if (students.length === 0) return `<tr><td colspan="11"><div class="empty-state"><div class="icon">🎒</div>Sem alunos cadastrados.</div></td></tr>`;
+  const color = yearColors[year];
+  return students.map((s, idx) => {
+    const stats = getStudentStats(year, s.id);
+    const pct = stats.total > 0 ? Math.round(stats.present / stats.total * 100) : null;
+    const convocado = s.convocado !== 'nao';
+    const freqColor = pct === null ? 'var(--text-muted)' : pct >= 75 ? 'var(--present)' : pct >= 50 ? 'var(--justified)' : 'var(--absent)';
+    return `
+    <tr onclick="openDetail(${year},'${s.id}')">
+      <td class="sl-num">${idx + 1}</td>
+      <td style="width:44px;padding-right:0;">
+        <div class="sl-initials" style="background:${color}">${initials(s.name)}</div>
+      </td>
+      <td>
+        <div class="sl-name">${s.name}</div>
+      </td>
+      <td>
+        <div style="font-size:0.85rem;">${s.serie || '—'}${s.turma ? ` <span style="color:var(--text-muted)">· Turma ${s.turma}</span>` : ''}</div>
+      </td>
+      <td>
+        <span class="stat-mini ${convocado ? 'badge-conv-sim' : 'badge-conv-nao'}">${convocado ? '🔔 Convocado' : 'Não Convocado'}</span>
+      </td>
+      <td style="text-align:center;">
+        <span class="stat-mini chip-p">✓ ${stats.present}</span>
+      </td>
+      <td style="text-align:center;">
+        <span class="stat-mini chip-f">✗ ${stats.absences}</span>
+      </td>
+      <td style="text-align:center;">
+        ${stats.justified > 0 ? `<span class="stat-mini chip-j">⚠ ${stats.justified}</span>` : `<span style="color:var(--text-muted);font-size:0.8rem;">—</span>`}
+      </td>
+      <td style="text-align:center;">
+        <span class="sl-freq" style="color:${freqColor}">${pct !== null ? pct + '%' : '—'}</span>
+      </td>
+      <td style="text-align:center;">
+        ${s.obs && s.obs.length > 0 ? `<span class="stat-mini" style="background:#fef3e2;color:#a0620a;">📝 ${s.obs.length}</span>` : `<span style="color:var(--text-muted);font-size:0.8rem;">—</span>`}
+      </td>
+      <td onclick="event.stopPropagation()">
+        <div class="sl-actions">
+          <button class="icon-btn" onclick="openObsModal(${year},'${s.id}')" title="Observações">💬</button>
+          <button class="icon-btn danger" onclick="openDeleteModal(${year},'${s.id}')" title="Remover">🗑</button>
+        </div>
+      </td>
+    </tr>`;
+  }).join('');
+}
+
+function filterStudents(year, query) {
+  const students = state.students[year].filter(s => s.name.toLowerCase().includes(query.toLowerCase()));
+  document.getElementById(`students-grid-${year}`).innerHTML = renderStudentCards(year, students);
+}
+
+// -------- STATS --------
+function getStudentStats(year, sid) {
+  let present=0, absences=0, justified=0, total=0;
+  const absenceDates = [];
+  Object.keys(state.records).forEach(key => {
+    // Key format: "YYYY-MM-DD_year_id" — split gives exactly 3 parts
+    const parts = key.split('_');
+    const recDate = parts[0];
+    const recYear = parseInt(parts[1]);
+    const recId   = parts[2];
+    if (recYear === year && recId === sid) {
+      total++;
+      const v = state.records[key];
+      if (v === 'P') present++;
+      else if (v === 'F') { absences++; absenceDates.push({ date: recDate, type:'F' }); }
+      else if (v === 'J') { justified++; absenceDates.push({ date: recDate, type:'J' }); }
+    }
+  });
+  return { present, absences, justified, total, absenceDates: absenceDates.sort((a,b)=>b.date.localeCompare(a.date)) };
+}
+
+// -------- ACTIONS --------
+function setStatus(year, sid, status) {
+  const key = `${currentDate[year]}_${year}_${sid}`;
+  if (state.records[key] === status) {
+    delete state.records[key];
+  } else {
+    state.records[key] = status;
+  }
+  save();
+  renderPanel(year);
+}
+
+function changeDate(year, val) {
+  currentDate[year] = val;
+  renderPanel(year);
+}
+
+function markAllPresent(year) {
+  const date = currentDate[year];
+  state.students[year].forEach(s => {
+    state.records[`${date}_${year}_${s.id}`] = 'P';
+  });
+  save();
+  renderPanel(year);
+  showToast('Todos marcados como presentes!');
+}
+
+function markAllAbsent(year) {
+  const date = currentDate[year];
+  state.students[year].forEach(s => {
+    if (s.convocado !== 'nao') {
+      state.records[`${date}_${year}_${s.id}`] = 'F';
+    }
+  });
+  save();
+  renderPanel(year);
+  showToast('Todos convocados marcados como ausentes!');
+}
+
+
+// -------- CLEAR CHAMADA --------
+function clearChamada(year) {
+  const date = currentDate[year];
+  const keysToDelete = Object.keys(state.records).filter(k => k.startsWith(`${date}_${year}_`));
+  if (keysToDelete.length === 0) { showToast('Nenhum registro para limpar neste dia.'); return; }
+  if (!confirm(`Limpar todos os registros de ${formatDate(date)} para o ${yearNames[year]}?`)) return;
+  keysToDelete.forEach(k => delete state.records[k]);
+  save();
+  renderPanel(year);
+  showToast('Chamada do dia limpa!');
+}
+
+// -------- REGISTRO GERAL --------
+function renderRegistroGeral(year) {
+  const allStudents = state.students[year];
+  if (allStudents.length === 0) {
+    return `<div class="rg-wrap"><div class="rg-empty">👤 Nenhum aluno cadastrado ainda.</div></div>`;
+  }
+
+  // Collect all dates with any record for this year, sorted ascending
+  const datesSet = new Set();
+  Object.keys(state.records).forEach(key => {
+    const parts = key.split('_');
+    if (parseInt(parts[1]) === year) datesSet.add(parts[0]);
+  });
+  const dates = Array.from(datesSet).sort();
+
+  if (dates.length === 0) {
+    return `<div class="rg-wrap"><div class="rg-empty">📋 Nenhuma chamada registrada ainda. Registre a presença na aba <strong>Chamada do Dia</strong>.</div></div>`;
+  }
+
+  // Apply filter
+  const filter = rgFilter[year] || 'conv';
+  const students = filter === 'todos' ? allStudents
+    : filter === 'nao' ? allStudents.filter(s => s.convocado === 'nao')
+    : allStudents.filter(s => s.convocado !== 'nao');
+
+  const nConv = allStudents.filter(s => s.convocado !== 'nao').length;
+  const nNao  = allStudents.length - nConv;
+
+  const filterBar = `
+  <div class="rg-filter-bar">
+    <span>Exibir:</span>
+    <button class="rg-filter-btn ${filter === 'conv'  ? 'active' : ''}" onclick="setRgFilter(${year},'conv')">🔔 Convocados (${nConv})</button>
+    <button class="rg-filter-btn ${filter === 'nao'   ? 'active' : ''}" onclick="setRgFilter(${year},'nao')">Não Convocados (${nNao})</button>
+    <button class="rg-filter-btn ${filter === 'todos' ? 'active' : ''}" onclick="setRgFilter(${year},'todos')">Todos (${allStudents.length})</button>
+  </div>`;
+
+  if (students.length === 0) {
+    return filterBar + `<div class="rg-wrap"><div class="rg-empty">Nenhum aluno nesta categoria.</div></div>`;
+  }
+
+  // Group dates by month
+  const monthGroups = [];
+  dates.forEach(d => {
+    const [y, m] = d.split('-');
+    const label = new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
+                                            .replace('.', '').replace(' de ', '/');
+    const last = monthGroups[monthGroups.length - 1];
+    if (!last || last.key !== `${y}-${m}`) {
+      monthGroups.push({ key: `${y}-${m}`, label: label.charAt(0).toUpperCase() + label.slice(1), dates: [d] });
+    } else {
+      last.dates.push(d);
+    }
+  });
+
+  // Header row 1: fixed cols + month groups
+  const fixedHeaders1 = `
+    <th class="rg-fixed rg-fixed-0" rowspan="2">#</th>
+    <th class="rg-fixed rg-fixed-1" rowspan="2">Nome</th>
+    <th class="rg-fixed rg-fixed-2" rowspan="2">Turma</th>`;
+
+  const monthHeaders = monthGroups.map((mg, i) =>
+    `<th class="rg-month${i > 0 ? ' rg-month-sep' : ''}" colspan="${mg.dates.length}">${mg.label.toUpperCase()}</th>`
+  ).join('');
+
+  // Header row 2: day numbers
+  let dayHeaders = '';
+  monthGroups.forEach((mg, mi) => {
+    mg.dates.forEach((d, di) => {
+      const day = d.split('-')[2];
+      const isFirst = mi > 0 && di === 0;
+      dayHeaders += `<th class="${isFirst ? 'rg-month-sep' : ''}" style="min-width:14px;max-width:14px;">${parseInt(day)}</th>`;
+    });
+  });
+
+  // Body rows
+  const bodyRows = students.map((s, idx) => {
+    let cells = '';
+    monthGroups.forEach((mg, mi) => {
+      mg.dates.forEach((d, di) => {
+        const key = `${d}_${year}_${s.id}`;
+        const st = state.records[key] || '';
+        const isFirst = mi > 0 && di === 0;
+        const cls = st === 'P' ? 'rg-cell-P' : st === 'F' ? 'rg-cell-F' : st === 'J' ? 'rg-cell-J' : 'rg-cell-empty';
+        const label = st || '·';
+        cells += `<td class="${cls}${isFirst ? ' rg-month-sep' : ''}">${label}</td>`;
+      });
+    });
+
+    const turmaLabel = s.turma ? `${s.serie ? s.serie.replace('º Ano','') + 'º' : ''}${s.turma}` : (s.serie ? s.serie.replace('º Ano', 'º') : '—');
+
+    return `<tr>
+      <td class="rg-fixed rg-fixed-0">${idx + 1}</td>
+      <td class="rg-fixed rg-fixed-1" title="${s.name}">${s.name}</td>
+      <td class="rg-fixed rg-fixed-2">${turmaLabel}</td>
+      ${cells}
+    </tr>`;
+  }).join('');
+
+  return `
+  ${filterBar}
+  <div class="rg-wrap">
+    <div class="rg-scroll">
+      <table class="rg-table">
+        <thead>
+          <tr>${fixedHeaders1}${monthHeaders}</tr>
+          <tr>${dayHeaders}</tr>
+        </thead>
+        <tbody>${bodyRows}</tbody>
+      </table>
+    </div>
+    <div class="rg-legend">
+      <span class="rg-tot rg-tot-p">P — Presente</span>
+      <span class="rg-tot rg-tot-f">F — Falta</span>
+      <span class="rg-tot rg-tot-j">J — Justificado</span>
+      <span style="font-size:0.75rem;color:var(--text-muted);margin-left:4px;">· — Não registrado</span>
+    </div>
+  </div>`;
+}
+
+// -------- RESUMO TAB --------
+function getConsecutiveAbsences(year, sid) {
+  // Keys: "YYYY-MM-DD_year_id" — split on '_' gives [date, year, id]
+  const entries = Object.keys(state.records)
+    .filter(k => { const p=k.split('_'); return parseInt(p[1])===year && p[2]===sid; })
+    .map(k => ({ date: k.split('_')[0], status: state.records[k] }))
+    .sort((a,b) => b.date.localeCompare(a.date)); // newest first
+
+  let consecutive = 0;
+  for (const entry of entries) {
+    if (entry.status === 'F' || entry.status === 'J') consecutive++;
+    else break; // any presence breaks the streak
+  }
+  return consecutive;
+}
+
+function renderResumo(year) {
+  const students = state.students[year];
+  const color = yearColors[year];
+
+  if (students.length === 0) {
+    return `<div class="chamada-card"><div class="empty-state"><div class="icon">📊</div>Nenhum aluno cadastrado ainda.</div></div>`;
+  }
+
+  // Global stats across all dates — frequency only counts convocados
+  let totalP=0, totalF=0, totalJ=0;
+  let freqP=0, freqTotal=0; // for frequency calculation (convocados only)
+  students.forEach(s => {
+    const st = getStudentStats(year, s.id);
+    totalP += st.present;
+    totalF += st.absences;
+    totalJ += st.justified;
+    if (s.convocado !== 'nao') {
+      freqP     += st.present;
+      freqTotal += st.present + st.absences + st.justified;
+    }
+  });
+  const totalMarked = totalP + totalF + totalJ;
+  const freqGeral = freqTotal > 0 ? Math.round(freqP / freqTotal * 100) : null;
+
+  // Students in alert: 5+ consecutive absences (F or J)
+  const alertStudents = students
+    .map(s => ({ s, consec: getConsecutiveAbsences(year, s.id) }))
+    .filter(x => x.consec >= 5)
+    .sort((a,b) => b.consec - a.consec);
+
+  // Attendance per student for bar chart
+  const topFaltas = [...students]
+    .map(s => { const parts=s.name.trim().split(' '); return { name: parts.length>1?parts[0]+' '+parts[parts.length-1]:parts[0], stats: getStudentStats(year, s.id) }; })
+    .filter(x => x.stats.total > 0)
+    .sort((a,b) => b.stats.absences - a.stats.absences)
+    .slice(0, 10);
+
+  const chartId  = `chart-bar-${year}`;
+  const donutId  = `chart-donut-${year}`;
+
+  // Convocados vs não-convocados
+  const nConv = students.filter(s => s.convocado !== 'nao').length;
+  const nNao  = students.length - nConv;
+
+  const alertHTML = alertStudents.length === 0
+    ? `<div class="alert-empty">✅ Nenhum aluno com 5+ faltas consecutivas!</div>`
+    : alertStudents.map(({s, consec}) => `
+        <div class="alert-item">
+          <div class="student-initials" style="background:${color};width:32px;height:32px;font-size:0.75rem;">${initials(s.name)}</div>
+          <span class="alert-name">${s.name}</span>
+          <span class="alert-count">⚠ ${consec} consecutiva${consec>1?'s':''}</span>
+        </div>`).join('');
+
+  const html = `
+  <div class="kpi-row">
+    <div class="kpi-box">
+      <span class="kpi-num" style="color:var(--text)">${students.length}</span>
+      <span class="kpi-lbl">Alunos</span>
+    </div>
+    <div class="kpi-box">
+      <span class="kpi-num" style="color:var(--present)">${totalP}</span>
+      <span class="kpi-lbl">Presenças</span>
+    </div>
+    <div class="kpi-box">
+      <span class="kpi-num" style="color:var(--absent)">${totalF}</span>
+      <span class="kpi-lbl">Faltas</span>
+    </div>
+    <div class="kpi-box">
+      <span class="kpi-num" style="color:${freqGeral===null?'var(--text-muted)':freqGeral>=75?'var(--present)':freqGeral>=50?'var(--justified)':'var(--absent)'}">${freqGeral!==null?freqGeral+'%':'—'}</span>
+      <span class="kpi-lbl">Freq. Geral</span>
+    </div>
+  </div>
+
+  <div class="resumo-layout">
+    <div class="resumo-card">
+      <h4>📈 Faltas por Aluno (Top 10)</h4>
+      <div class="chart-wrap"><canvas id="${chartId}"></canvas></div>
+    </div>
+    <div class="resumo-card">
+      <h4>🍩 Distribuição de Presenças</h4>
+      <div class="donut-wrap"><canvas id="${donutId}" style="max-width:160px;max-height:160px;"></canvas></div>
+      <div class="legend-row">
+        <div class="legend-dot"><span style="background:var(--present)"></span> Presentes (${totalP})</div>
+        <div class="legend-dot"><span style="background:var(--absent)"></span> Faltas (${totalF})</div>
+        <div class="legend-dot"><span style="background:var(--justified)"></span> Justif. (${totalJ})</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="resumo-layout">
+    <div class="resumo-card">
+      <h4>🚨 Alunos em Alerta (5+ faltas consecutivas)</h4>
+      <div class="alert-list">${alertHTML}</div>
+    </div>
+    <div class="resumo-card">
+      <h4>🔔 Convocados × Não Convocados</h4>
+      <div style="display:flex;gap:18px;align-items:center;margin-top:8px;">
+        <div class="kpi-box" style="flex:1">
+          <span class="kpi-num" style="color:#1d4d7a">${nConv}</span>
+          <span class="kpi-lbl">Convocados</span>
+        </div>
+        <div class="kpi-box" style="flex:1">
+          <span class="kpi-num" style="color:var(--text-muted)">${nNao}</span>
+          <span class="kpi-lbl">Não Convocados</span>
+        </div>
+        <div class="kpi-box" style="flex:1">
+          <span class="kpi-num" style="color:var(--absent)">${alertStudents.length}</span>
+          <span class="kpi-lbl">Em Alerta</span>
+        </div>
+      </div>
+    </div>
+  </div>`;
+
+  // Defer chart rendering after DOM update
+  setTimeout(() => {
+    // Bar chart — top faltas
+    const barCtx = document.getElementById(chartId);
+    if (barCtx && topFaltas.length > 0) {
+      if (barCtx._chartInst) barCtx._chartInst.destroy();
+      barCtx._chartInst = new Chart(barCtx, {
+        type: 'bar',
+        data: {
+          labels: topFaltas.map(x => x.name),
+          datasets: [
+            { label: 'Faltas', data: topFaltas.map(x => x.stats.absences), backgroundColor: '#fceaea', borderColor: '#b83232', borderWidth: 1.5, borderRadius: 4 },
+            { label: 'Presenças', data: topFaltas.map(x => x.stats.present), backgroundColor: '#e8f2eb', borderColor: '#2d5a3d', borderWidth: 1.5, borderRadius: 4 },
+          ]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { position: 'bottom', labels: { font: { size: 11 }, boxWidth: 12 } } },
+          scales: { x: { grid: { display: false } }, y: { beginAtZero: true, ticks: { stepSize: 1 } } }
+        }
+      });
+    }
+
+    // Donut chart
+    const donutCtx = document.getElementById(donutId);
+    if (donutCtx && totalMarked > 0) {
+      if (donutCtx._chartInst) donutCtx._chartInst.destroy();
+      donutCtx._chartInst = new Chart(donutCtx, {
+        type: 'doughnut',
+        data: {
+          labels: ['Presentes', 'Faltas', 'Justificadas'],
+          datasets: [{ data: [totalP, totalF, totalJ], backgroundColor: ['#2d5a3d','#b83232','#c4880a'], borderWidth: 0, hoverOffset: 6 }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: true,
+          plugins: { legend: { display: false } },
+          cutout: '68%'
+        }
+      });
+    }
+  }, 60);
+
+  return html;
+}
+
+// -------- EXPORT RELATÓRIO --------
+function exportRelatorio(year) {
+  const students = state.students[year];
+  if (students.length === 0) { showToast('Nenhum aluno cadastrado nesta série.'); return; }
+
+  // Gather all dates that have records for this year, sorted
+  const datesSet = new Set();
+  Object.keys(state.records).forEach(key => {
+    const parts = key.split('_');
+    if (parseInt(parts[1]) === year) datesSet.add(parts[0]);
+  });
+  const dates = Array.from(datesSet).sort();
+
+  const wb = XLSX.utils.book_new();
+
+  // ---- Sheet 1: Frequência Geral ----
+  const headerRow = ['Nº', 'Nome', 'Série', 'Turma', 'Convocado', ...dates.map(d => {
+    const [y,m,day] = d.split('-'); return `${day}/${m}`;
+  }), 'Total P', 'Total F', 'Total J', '% Freq.'];
+
+  const dataRows = students.map((s, idx) => {
+    const row = [
+      idx+1,
+      s.name,
+      s.serie || '',
+      s.turma || '',
+      s.convocado !== 'nao' ? 'Sim' : 'Não',
+    ];
+    let P=0, F=0, J=0;
+    dates.forEach(d => {
+      const v = state.records[`${d}_${year}_${s.id}`] || '—';
+      row.push(v);
+      if (v==='P') P++;
+      else if (v==='F') F++;
+      else if (v==='J') J++;
+    });
+    const total = P+F+J;
+    row.push(P, F, J, total > 0 ? Math.round(P/total*100)+'%' : '—');
+    return row;
+  });
+
+  const ws1 = XLSX.utils.aoa_to_sheet([headerRow, ...dataRows]);
+  ws1['!cols'] = [
+    {wch:5},{wch:32},{wch:10},{wch:8},{wch:12},
+    ...dates.map(()=>({wch:7})),
+    {wch:8},{wch:8},{wch:8},{wch:8}
+  ];
+  XLSX.utils.book_append_sheet(wb, ws1, 'Frequência Geral');
+
+  // ---- Sheet 2: Resumo de Faltas ----
+  const absRows = [['Nome', 'Série', 'Turma', 'Data', 'Tipo']];
+  students.forEach(s => {
+    Object.keys(state.records).forEach(key => {
+      const parts = key.split('_');
+      if (parseInt(parts[1]) === year && parts[2] === s.id) {
+        const v = state.records[key];
+        if (v === 'F' || v === 'J') {
+          const [y,m,d] = parts[0].split('-');
+          absRows.push([s.name, s.serie||'', s.turma||'', `${d}/${m}/${y}`, v==='F'?'Falta':'Justificada']);
+        }
+      }
+    });
+  });
+  const ws2 = XLSX.utils.aoa_to_sheet(absRows);
+  ws2['!cols'] = [{wch:32},{wch:10},{wch:8},{wch:12},{wch:12}];
+  XLSX.utils.book_append_sheet(wb, ws2, 'Registro de Faltas');
+
+  // ---- Download ----
+  const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+  const blob = new Blob([wbout], { type: 'application/octet-stream' });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = `relatorio_${yearNames[year].replace('º ','_').replace(' ','')}_nivelamento.xlsx`;
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+  showToast(`Relatório do ${yearNames[year]} exportado!`);
+}
+
+function switchTab(year) {
+  currentYear = year;
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.toggle('active', parseInt(b.dataset.year)===year));
+  document.querySelectorAll('.year-panel').forEach(p => p.classList.remove('active'));
+  document.getElementById(`panel-${year}`).classList.add('active');
+}
+
+// -------- ADD STUDENT --------
+function openAddModal(year) {
+  addTargetYear = year;
+  document.getElementById('addName').value = '';
+  document.getElementById('addSerie').value = `${year}º Ano`;
+  document.getElementById('addTurma').value = '';
+  document.getElementById('convocadoSim').checked = true;
+  clearImport();
+  switchImportTab('manual');
+  openModal('modalAdd');
+}
+
+function confirmAddStudent() {
+  const name = document.getElementById('addName').value.trim();
+  if (!name) { document.getElementById('addName').focus(); return; }
+  const serie = document.getElementById('addSerie').value.trim();
+  const turma = document.getElementById('addTurma').value.trim();
+  const convocado = document.querySelector('input[name=addConvocado]:checked')?.value || 'sim';
+  const student = { id: uid(), name, serie, turma, convocado, obs: [] };
+  state.students[addTargetYear].push(student);
+  sortStudents(addTargetYear);
+  save();
+  closeModal('modalAdd');
+  renderPanel(addTargetYear);
+  showToast(`${name} adicionado(a)!`);
+}
+
+// -------- DELETE STUDENT --------
+function openDeleteModal(year, sid) {
+  const s = state.students[year].find(x=>x.id===sid);
+  document.getElementById('deleteStudentName').textContent = s.name;
+  pendingDelete = { year, sid };
+  openModal('modalDelete');
+}
+
+function confirmDelete() {
+  const { year, sid } = pendingDelete;
+  const s = state.students[year].find(x=>x.id===sid);
+  if (!s) { closeModal('modalDelete'); return; } // guard: student already removed
+  const name = s.name;
+  state.students[year] = state.students[year].filter(x=>x.id!==sid);
+  // Use endsWith to match exact id (avoids partial-id collisions)
+  Object.keys(state.records).forEach(k => { if (k.endsWith(`_${year}_${sid}`)) delete state.records[k]; });
+  save();
+  closeModal('modalDelete');
+  renderPanel(year);
+  showToast(`${name} removido(a).`);
+}
+
+// -------- OBS --------
+function openObsModal(year, sid) {
+  const s = state.students[year].find(x=>x.id===sid);
+  pendingObs = { year, sid };
+  document.getElementById('obsStudentName').textContent = s.name;
+  document.getElementById('obsText').value = '';
+  renderObsHistory(s);
+  openModal('modalObs');
+}
+
+function renderObsHistory(s) {
+  const container = document.getElementById('obsHistory');
+  if (!s.obs || s.obs.length === 0) {
+    container.innerHTML = '<p style="font-size:0.82rem;color:var(--text-muted);margin-bottom:6px;">Nenhuma observação ainda.</p>';
+    return;
+  }
+  container.innerHTML = '<div class="obs-list">' +
+    s.obs.slice().reverse().map(o => `
+      <div class="obs-item">
+        <div class="obs-date">${formatDate(o.date)}</div>
+        ${o.text}
+      </div>`).join('') + '</div>';
+}
+
+function saveObs() {
+  const text = document.getElementById('obsText').value.trim();
+  if (!text) return;
+  const { year, sid } = pendingObs;
+  const s = state.students[year].find(x=>x.id===sid);
+  if (!s.obs) s.obs = [];
+  s.obs.push({ date: today(), text });
+  save();
+  renderObsHistory(s);
+  document.getElementById('obsText').value = '';
+  renderPanel(year);
+  showToast('Observação salva!');
+}
+
+// -------- DETAIL --------
+function openDetail(year, sid) {
+  const s = state.students[year].find(x=>x.id===sid);
+  const stats = getStudentStats(year, sid);
+  const color = yearColors[year];
+  const pct = stats.total > 0 ? Math.round(stats.present/stats.total*100) : '-';
+
+  document.getElementById('detailTitle').textContent = s.name;
+
+  const absenceHTML = stats.absenceDates.length === 0
+    ? '<div class="empty-state" style="padding:16px 0"><div class="icon">✅</div>Nenhuma falta registrada.</div>'
+    : `<div class="absence-list">${stats.absenceDates.map(a=>`
+        <div class="absence-item">
+          <span class="date">${formatDate(a.date)}</span>
+          <span class="type-badge badge-${a.type}">${a.type === 'F' ? 'Falta' : 'Justificada'}</span>
+        </div>`).join('')}</div>`;
+
+  const obsHTML = (!s.obs || s.obs.length === 0)
+    ? '<div class="empty-state" style="padding:16px 0"><div class="icon">💬</div>Nenhuma observação.</div>'
+    : `<div class="obs-list">${s.obs.slice().reverse().map(o=>`
+        <div class="obs-item">
+          <div class="obs-date">${formatDate(o.date)}</div>
+          ${o.text}
+        </div>`).join('')}</div>`;
+
+  document.getElementById('detailBody').innerHTML = `
+    <div class="detail-hero">
+      <div class="detail-initials" style="background:${color}">${initials(s.name)}</div>
+      <div>
+        <div style="font-size:0.82rem;color:var(--text-muted)">${yearNames[year]}${s.serie ? ` · ${s.serie}${s.turma ? ` – Turma ${s.turma}` : ''}` : ''}</div>
+        <div style="margin-top:6px;">
+          <span class="stat-mini ${s.convocado !== 'nao' ? 'badge-conv-sim' : 'badge-conv-nao'}" style="display:inline-block;padding:3px 12px;border-radius:50px;font-size:0.78rem;font-weight:700;">${s.convocado !== 'nao' ? '🔔 Convocado' : 'Não Convocado'}</span>
+        </div>
+        <div style="margin-top:6px;font-size:0.85rem;">
+          ${stats.total > 0 ? `<span style="color:var(--text-muted)">${stats.total} chamada(s) realizada(s)</span>` : '<span style="color:var(--text-muted)">Sem chamadas ainda</span>'}
+        </div>
+      </div>
+    </div>
+    <div class="detail-stats">
+      <div class="detail-stat-card">
+        <span class="num" style="color:var(--present)">${stats.present}</span>
+        <span class="lbl">Presenças</span>
+      </div>
+      <div class="detail-stat-card">
+        <span class="num" style="color:var(--absent)">${stats.absences}</span>
+        <span class="lbl">Faltas</span>
+      </div>
+      <div class="detail-stat-card">
+        <span class="num" style="color:var(--text)">${pct}${stats.total>0?'%':''}</span>
+        <span class="lbl">Frequência</span>
+      </div>
+    </div>
+    ${stats.justified > 0 ? `<div style="text-align:center;margin-bottom:12px;font-size:0.83rem;color:var(--justified)">⚠ ${stats.justified} falta(s) justificada(s)</div>` : ''}
+    <div class="section-title">Registro de Faltas</div>
+    ${absenceHTML}
+    <div class="section-title">Observações</div>
+    ${obsHTML}
+    <div style="margin-top:20px;text-align:right;">
+      <button class="btn btn-outline" onclick="closeModal('modalDetail');openObsModal(${year},'${sid}')">+ Adicionar Observação</button>
+    </div>
+  `;
+  openModal('modalDetail');
+}
+
+// -------- UTILS --------
+function formatDate(d) {
+  if (!d) return '';
+  const [y,m,day] = d.split('-');
+  return `${day}/${m}/${y}`;
+}
+
+function openModal(id) { document.getElementById(id).classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+
+document.querySelectorAll('.modal-overlay').forEach(el => {
+  el.addEventListener('click', e => { if (e.target === el) el.classList.remove('open'); });
+});
+
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape') document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
+  if (e.key === 'Enter' && document.getElementById('modalAdd').classList.contains('open')) {
+    // Only trigger if focus is on the name or turma input (not select/textarea)
+    const focused = document.activeElement;
+    if (focused && (focused.id === 'addName' || focused.id === 'addTurma')) confirmAddStudent();
+  }
+  if (e.key === 'Enter' && document.getElementById('modalObs').classList.contains('open') && document.activeElement?.id !== 'obsText') saveObs();
+});
+
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// -------- IMPORT TAB SWITCH --------
+function switchImportTab(tab) {
+  document.querySelectorAll('.import-tab').forEach((b,i) => b.classList.toggle('active', (i===0&&tab==='manual')||(i===1&&tab==='excel')));
+  document.getElementById('pane-manual').classList.toggle('active', tab==='manual');
+  document.getElementById('pane-excel').classList.toggle('active', tab==='excel');
+}
+
+// -------- DOWNLOAD TEMPLATE --------
+function downloadTemplate() {
+  try {
+    const wb = XLSX.utils.book_new();
+    const wsData = [
+      ['Nome', 'Série', 'Turma', 'Convocado'],
+      ['Maria Souza',  '6º Ano', 'A', 'Sim'],
+      ['João Silva',   '7º Ano', 'B', 'Sim'],
+      ['Ana Lima',     '8º Ano', 'A', 'Não'],
+    ];
+    const ws = XLSX.utils.aoa_to_sheet(wsData);
+    ws['!cols'] = [{ wch: 34 }, { wch: 12 }, { wch: 10 }, { wch: 14 }];
+    XLSX.utils.book_append_sheet(wb, ws, 'Alunos');
+
+    const wsInst = XLSX.utils.aoa_to_sheet([
+      ['INSTRUÇÕES DE PREENCHIMENTO'],
+      [''],
+      ['Coluna A - Nome:',      'Nome completo do aluno (obrigatório)'],
+      ['Coluna B - Série:',     'Série do aluno: 6º Ano, 7º Ano, 8º Ano ou 9º Ano'],
+      ['Coluna C - Turma:',     'Turma do aluno: ex. A, B, C, 301, 702... (pode deixar em branco)'],
+      ['Coluna D - Convocado:', 'Digite "Sim" para Convocado ou "Não" para Não Convocado (padrão: Sim)'],
+      [''],
+      ['IMPORTANTE:'],
+      ['• Não altere os cabeçalhos da primeira linha'],
+      ['• Preencha a partir da linha 2'],
+      ['• Para Série, use exatamente: 6º Ano, 7º Ano, 8º Ano ou 9º Ano'],
+      ['• Para Convocado, use exatamente: Sim  ou  Não'],
+      ['• Salve o arquivo no formato .xlsx antes de importar'],
+    ]);
+    wsInst['!cols'] = [{ wch: 24 }, { wch: 58 }];
+    XLSX.utils.book_append_sheet(wb, wsInst, 'Instruções');
+
+    // Generate binary and force download via Blob
+    const wbout = XLSX.write(wb, { bookType: 'xlsx', type: 'array' });
+    const blob = new Blob([wbout], { type: 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = 'modelo_alunos_nivelamento.xlsx';
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+    showToast('Modelo baixado com sucesso!');
+  } catch(e) {
+    showToast('Erro ao gerar o modelo. Tente novamente.');
+    console.error(e);
+  }
+}
+
+// -------- DRAG & DROP --------
+const dropZone = document.getElementById('dropZone');
+dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('drag-over'); });
+dropZone.addEventListener('dragleave', () => dropZone.classList.remove('drag-over'));
+dropZone.addEventListener('drop', e => {
+  e.preventDefault(); dropZone.classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file) processExcelFile(file);
+});
+
+let importRows = [];
+
+function handleFileSelect(input) {
+  if (input.files[0]) processExcelFile(input.files[0]);
+}
+
+function processExcelFile(file) {
+  const ext = file.name.split('.').pop().toLowerCase();
+  if (!['xlsx','xls','csv'].includes(ext)) {
+    showToast('Formato inválido! Use .xlsx, .xls ou .csv');
+    return;
+  }
+  const reader = new FileReader();
+  reader.onload = e => {
+    try {
+      const data = new Uint8Array(e.target.result);
+      const wb = XLSX.read(data, { type: 'array' });
+      const ws = wb.Sheets[wb.SheetNames[0]];
+      const rows = XLSX.utils.sheet_to_json(ws, { header: 1, defval: '' });
+
+      // Find header row (look for "Nome" column)
+      let headerIdx = 0;
+      let nomeCol = -1, convCol = -1, serieCol = -1, turmaCol = -1;
+      for (let i = 0; i < Math.min(5, rows.length); i++) {
+        const r = rows[i].map(c => String(c).toLowerCase().trim());
+        const ni = r.findIndex(c => c.includes('nome'));
+        if (ni >= 0) {
+          headerIdx = i; nomeCol = ni;
+          // numCol removed — sequence number is auto-generated
+          convCol  = r.findIndex(c => c.includes('conv'));
+          serieCol = r.findIndex(c => c.includes('série') || c.includes('serie') || c === 'ano');
+          turmaCol = r.findIndex(c => c.includes('turma'));
+          break;
+        }
+      }
+      if (nomeCol < 0) { showImportResult('err', '❌ Coluna "Nome" não encontrada. Verifique o modelo.'); return; }
+
+      importRows = [];
+      const existingNames = new Set(state.students[addTargetYear].map(s => s.name.toLowerCase().trim()));
+
+      for (let i = headerIdx + 1; i < rows.length; i++) {
+        const row = rows[i];
+        const name     = String(row[nomeCol] || '').trim();
+        // num is auto-sequenced, not read from file
+        const serie    = serieCol >= 0 ? String(row[serieCol] || '').trim() : '';
+        const turma    = turmaCol >= 0 ? String(row[turmaCol] || '').trim() : '';
+        const convRaw  = convCol  >= 0 ? String(row[convCol]  || '').trim().toLowerCase() : 'sim';
+        const convocado = (convRaw === 'não' || convRaw === 'nao' || convRaw === 'n' || convRaw === 'false' || convRaw === '0') ? 'nao' : 'sim';
+        if (!name) continue;
+        const dup = existingNames.has(name.toLowerCase());
+        importRows.push({ name, serie, turma, convocado, dup, valid: !dup });
+      }
+
+      renderImportPreview();
+    } catch(err) {
+      showImportResult('err', '❌ Erro ao ler o arquivo. Certifique-se que é um .xlsx válido.');
+    }
+  };
+  reader.readAsArrayBuffer(file);
+}
+
+function renderImportPreview() {
+  if (importRows.length === 0) {
+    showImportResult('warn', '⚠ Nenhum aluno encontrado no arquivo.');
+    return;
+  }
+  const valid = importRows.filter(r => r.valid).length;
+  const dups  = importRows.filter(r => r.dup).length;
+
+  let msg = `✅ ${importRows.length} linha(s) encontrada(s) — ${valid} nova(s)`;
+  if (dups) msg += `, ${dups} duplicada(s) (serão ignoradas)`;
+  showImportResult(valid > 0 ? 'ok' : 'warn', msg);
+
+  const tbody = document.getElementById('previewBody');
+  tbody.innerHTML = importRows.map((r, i) => `
+    <tr class="${r.dup ? 'preview-row-err' : ''}">
+      <td>${i+1}</td>
+      <td>${r.name}</td>
+      <td>${r.serie || '—'}</td>
+      <td>${r.turma || '—'}</td>
+      <td>${r.convocado === 'sim' ? '🔔 Sim' : 'Não'}</td>
+      <td>${r.dup ? '⚠ Duplicado' : '✓ OK'}</td>
+    </tr>`).join('');
+
+  document.getElementById('importPreview').style.display = 'block';
+  document.getElementById('btnConfirmImport').disabled = valid === 0;
+}
+
+function showImportResult(type, msg) {
+  const el = document.getElementById('importResult');
+  el.className = `import-result ${type}`;
+  el.textContent = msg;
+  document.getElementById('importPreview').style.display = 'block';
+}
+
+function clearImport() {
+  importRows = [];
+  document.getElementById('importPreview').style.display = 'none';
+  document.getElementById('excelFileInput').value = '';
+}
+
+function confirmImport() {
+  const toAdd = importRows.filter(r => r.valid);
+  if (!toAdd.length) return;
+  toAdd.forEach(r => {
+    state.students[addTargetYear].push({ id: uid(), name: r.name, serie: r.serie, turma: r.turma, convocado: r.convocado, obs: [] });
+  });
+  sortStudents(addTargetYear);
+  save();
+  closeModal('modalAdd');
+  clearImport();
+  renderPanel(addTargetYear);
+  showToast(`${toAdd.length} aluno(s) importado(s) com sucesso!`);
+}
+
+// -------- DATE HEADER --------
+function updateHeaderDate() {
+  const now = new Date();
+  document.getElementById('headerDate').innerHTML =
+    now.toLocaleDateString('pt-BR', { weekday:'long', day:'numeric', month:'long', year:'numeric' });
+}
+
+// -------- INIT --------
+updateHeaderDate();
+
+// Load state from Firebase, then render
+(async () => {
+  try {
+    const snap = await getDoc(STATE_DOC);
+    if (snap.exists()) {
+      const data = snap.data();
+      state = data;
+      if (!state.students) state.students = {};
+      if (!state.records)  state.records  = {};
+      [6,7,8,9].forEach(y => { if (!Array.isArray(state.students[y])) state.students[y] = []; });
+    } else {
+      state = { students: { 6: [], 7: [], 8: [], 9: [] }, records: {} };
+    }
+  } catch(e) {
+    console.error('Erro ao carregar:', e);
+    showToast('\u26a0 Não foi possível carregar os dados. Usando dados locais.');
+    state = { students: { 6: [], 7: [], 8: [], 9: [] }, records: {} };
+  }
+
+  [6,7,8,9].forEach(y => sortStudents(y));
+  renderAll();
+  document.getElementById('fb-loading').style.display = 'none';
+})();
+</script>
+</body>
+</html>
