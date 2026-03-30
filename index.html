@@ -1061,6 +1061,51 @@
   </div>
 </div>
 
+<!-- MODAL: Editar Aluno -->
+<div class="modal-overlay" id="modalEdit">
+  <div class="modal" style="max-width:520px;">
+    <div class="modal-header">
+      <h2>Editar Aluno</h2>
+      <button class="close-btn" onclick="closeModal('modalEdit')">✕</button>
+    </div>
+    <div class="modal-body">
+      <div class="form-group">
+        <label>Nome Completo</label>
+        <input class="form-input" id="editName" type="text">
+      </div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Série</label>
+          <select class="form-input" id="editSerie">
+            <option value="">— Selecione —</option>
+            <option value="6º Ano">6º Ano</option>
+            <option value="7º Ano">7º Ano</option>
+            <option value="8º Ano">8º Ano</option>
+            <option value="9º Ano">9º Ano</option>
+          </select>
+        </div>
+        <div class="form-group" style="margin-bottom:0;">
+          <label>Turma</label>
+          <input class="form-input" id="editTurma" type="text" placeholder="Ex: A, B, 301...">
+        </div>
+      </div>
+      <div class="form-group" style="margin-top:16px;">
+        <label>Situação de Convocação</label>
+        <div class="convocado-toggle">
+          <input type="radio" name="editConvocado" id="editConvocadoSim" class="conv-sim" value="sim">
+          <label for="editConvocadoSim" style="border-right:1px solid var(--border)">🔔 Convocado</label>
+          <input type="radio" name="editConvocado" id="editConvocadoNao" class="conv-nao" value="nao">
+          <label for="editConvocadoNao">Não Convocado</label>
+        </div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn btn-outline" onclick="closeModal('modalEdit')">Cancelar</button>
+      <button class="btn btn-primary" onclick="confirmEditStudent()">Salvar</button>
+    </div>
+  </div>
+</div>
+
 <div class="toast" id="toast"></div>
 
 <!-- Firebase loading overlay -->
@@ -1324,6 +1369,7 @@ function renderStudentCards(year, students) {
       </td>
       <td onclick="event.stopPropagation()">
         <div class="sl-actions">
+          <button class="icon-btn" onclick="openEditModal(${year},'${s.id}')" title="Editar">✏️</button>
           <button class="icon-btn" onclick="openObsModal(${year},'${s.id}')" title="Observações">💬</button>
           <button class="icon-btn danger" onclick="openDeleteModal(${year},'${s.id}')" title="Remover">🗑</button>
         </div>
@@ -1817,6 +1863,39 @@ function confirmAddStudent() {
   showToast(`${name} adicionado(a)!`);
 }
 
+// -------- EDIT STUDENT --------
+let pendingEdit = null;
+
+function openEditModal(year, sid) {
+  const s = state.students[year].find(x => x.id === sid);
+  if (!s) return;
+  pendingEdit = { year, sid };
+  document.getElementById('editName').value  = s.name;
+  document.getElementById('editSerie').value = s.serie || '';
+  document.getElementById('editTurma').value = s.turma || '';
+  document.getElementById('editConvocadoSim').checked = s.convocado !== 'nao';
+  document.getElementById('editConvocadoNao').checked = s.convocado === 'nao';
+  openModal('modalEdit');
+}
+
+function confirmEditStudent() {
+  if (!pendingEdit) return;
+  const { year, sid } = pendingEdit;
+  const s = state.students[year].find(x => x.id === sid);
+  if (!s) return;
+  const name = document.getElementById('editName').value.trim();
+  if (!name) { showToast('O nome não pode estar vazio.'); return; }
+  s.name      = name;
+  s.serie     = document.getElementById('editSerie').value;
+  s.turma     = document.getElementById('editTurma').value.trim();
+  s.convocado = document.getElementById('editConvocadoSim').checked ? 'sim' : 'nao';
+  sortStudents(year);
+  save();
+  closeModal('modalEdit');
+  renderPanel(year);
+  showToast('Aluno atualizado com sucesso!');
+}
+
 // -------- DELETE STUDENT --------
 function openDeleteModal(year, sid) {
   const s = state.students[year].find(x=>x.id===sid);
@@ -2193,6 +2272,7 @@ Object.assign(window, {
   openAddModal, confirmAddStudent, switchImportTab, downloadTemplate,
   handleFileSelect, clearImport, confirmImport,
   closeModal, openObsModal, saveObs,
+  openEditModal, confirmEditStudent,
   openDeleteModal, confirmDelete,
   openDetail,
   setStatus, markAllPresent, markAllAbsent, clearChamada,
