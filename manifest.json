@@ -1,14 +1,12 @@
 {
-  "name": "Chamada — Nivelamento Escolar",
+  "name": "Nivelamento Escolar",
   "short_name": "Nivelamento",
-  "description": "Sistema de controle de presença para nivelamento escolar",
-  "start_url": "/Nivelamento/",
-  "scope": "/Nivelamento/",
+  "description": "Sistema de chamada para nivelamento escolar",
+  "start_url": "./index.html",
   "display": "standalone",
-  "orientation": "portrait-primary",
-  "background_color": "#f5f2ec",
+  "background_color": "#1a1714",
   "theme_color": "#1a1714",
-  "lang": "pt-BR",
+  "orientation": "any",
   "icons": [
     {
       "src": "icon-192.png",

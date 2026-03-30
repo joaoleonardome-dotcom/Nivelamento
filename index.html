@@ -1356,10 +1356,10 @@ function renderStudentCards(year, students) {
         <div class="sl-name">${s.name}</div>
       </td>
       <td>
-        <div style="font-size:0.85rem;">${s.serie || '—'}${s.turma ? ` <span style="color:var(--text-muted)">· Turma ${s.turma}</span>` : ''}</div>
+        <div style="font-size:0.85rem;white-space:nowrap;">${s.serie ? s.serie.replace(/º Ano/i, 'º') : '—'}${s.turma ? `<span style="color:var(--text-muted)">${s.turma}</span>` : ''}</div>
       </td>
       <td>
-        <span class="stat-mini ${convocado ? 'badge-conv-sim' : 'badge-conv-nao'}">${convocado ? '🔔 Convocado' : 'Não Convocado'}</span>
+        <span class="stat-mini ${convocado ? 'badge-conv-sim' : 'badge-conv-nao'}" style="white-space:nowrap;">${convocado ? '🔔 Convocado' : 'Não Convocado'}</span>
       </td>
       <td style="text-align:center;">
         <span class="stat-mini chip-p">✓ ${stats.present}</span>
