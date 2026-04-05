@@ -7,7 +7,7 @@
 
 <!-- PWA -->
 <link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#1a1714">
+<meta name="theme-color" content="#5b8fc9">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Nivelamento">
@@ -18,31 +18,36 @@
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   :root {
-    --bg: #f5f2ec;
+    --bg: #f0f4f8;
     --surface: #ffffff;
-    --surface2: #f0ede6;
-    --border: #e0d9ce;
-    --text: #1a1714;
-    --text-muted: #7a7168;
-    --accent: #2d5a3d;
-    --accent-light: #e8f2eb;
-    --accent2: #c4571a;
+    --surface2: #f7f9fc;
+    --border: #dde3ed;
+    --text: #2c3a52;
+    --text-muted: #8394ae;
+    --accent: #5b8fc9;
+    --accent-light: #e8f1fb;
+    --accent2: #e07b54;
     --accent2-light: #fdf0e8;
-    --present: #2d5a3d;
-    --present-bg: #e8f2eb;
-    --absent: #b83232;
+    --present: #4a9b72;
+    --present-bg: #e6f5ee;
+    --absent: #d96b6b;
     --absent-bg: #fceaea;
-    --justified: #c4880a;
+    --justified: #c49a3c;
     --justified-bg: #fdf6e3;
-    --shadow: 0 2px 12px rgba(26,23,20,0.08);
-    --shadow-lg: 0 8px 32px rgba(26,23,20,0.12);
-    --radius: 12px;
-    --radius-sm: 8px;
+    --shadow: 0 2px 16px rgba(44,58,82,0.07);
+    --shadow-lg: 0 8px 32px rgba(44,58,82,0.11);
+    --radius: 14px;
+    --radius-sm: 9px;
 
-    --6ano: #2d5a3d;
-    --7ano: #1d4d7a;
-    --8ano: #7a2d6b;
-    --9ano: #c4571a;
+    --6ano: #4a9b72;
+    --7ano: #5b8fc9;
+    --8ano: #9b72c4;
+    --9ano: #e07b54;
+
+    --6ano-pastel: #e6f5ee;
+    --7ano-pastel: #e8f1fb;
+    --8ano-pastel: #f2eafc;
+    --9ano-pastel: #fdf0e8;
   }
 
   * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -52,35 +57,58 @@
     background: var(--bg);
     color: var(--text);
     min-height: 100vh;
+    -webkit-font-smoothing: antialiased;
   }
 
   /* ---- HEADER ---- */
   header {
-    background: var(--text);
-    color: #fff;
-    padding: 20px 32px;
+    background: var(--surface);
+    color: var(--text);
+    padding: 0 36px;
     display: flex;
     align-items: center;
     justify-content: space-between;
     position: sticky;
     top: 0;
     z-index: 100;
-    box-shadow: var(--shadow-lg);
+    height: 68px;
+    border-bottom: 1.5px solid var(--border);
+    box-shadow: 0 2px 12px rgba(44,58,82,0.06);
+  }
+  .header-left {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+  }
+  .header-logo {
+    width: 38px; height: 38px;
+    background: linear-gradient(135deg, #5b8fc9 0%, #4a9b72 100%);
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 1.1rem;
+    flex-shrink: 0;
+    box-shadow: 0 2px 8px rgba(91,143,201,0.3);
   }
   header h1 {
     font-family: 'DM Serif Display', serif;
-    font-size: 1.5rem;
+    font-size: 1.2rem;
     letter-spacing: -0.02em;
+    color: var(--text);
   }
-  header span {
-    font-size: 0.8rem;
-    color: rgba(255,255,255,0.5);
-    font-weight: 300;
+  header .header-subtitle {
+    font-size: 0.75rem;
+    color: var(--text-muted);
+    font-weight: 400;
+    margin-top: 1px;
   }
   .header-date {
-    font-size: 0.85rem;
-    color: rgba(255,255,255,0.7);
+    font-size: 0.82rem;
+    color: var(--text-muted);
     text-align: right;
+    background: var(--surface2);
+    padding: 7px 14px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
   }
 
   /* ---- LAYOUT ---- */
@@ -96,24 +124,27 @@
     gap: 8px;
     margin-bottom: 28px;
     flex-wrap: wrap;
+    background: var(--surface);
+    padding: 6px;
+    border-radius: var(--radius);
+    border: 1.5px solid var(--border);
+    width: fit-content;
+    box-shadow: var(--shadow);
   }
   .tab-btn {
-    padding: 10px 24px;
-    border: 2px solid var(--border);
-    background: var(--surface);
-    border-radius: 50px;
+    padding: 9px 26px;
+    border: none;
+    background: transparent;
+    border-radius: 9px;
     font-family: 'DM Sans', sans-serif;
-    font-size: 0.9rem;
-    font-weight: 500;
+    font-size: 0.88rem;
+    font-weight: 600;
     cursor: pointer;
     color: var(--text-muted);
     transition: all 0.2s;
   }
-  .tab-btn:hover { border-color: var(--text); color: var(--text); }
-  .tab-btn.active {
-    color: #fff;
-    border-color: transparent;
-  }
+  .tab-btn:hover { background: var(--surface2); color: var(--text); }
+  .tab-btn.active { color: #fff; box-shadow: 0 2px 8px rgba(0,0,0,0.12); }
   .tab-btn[data-year="6"].active { background: var(--6ano); }
   .tab-btn[data-year="7"].active { background: var(--7ano); }
   .tab-btn[data-year="8"].active { background: var(--8ano); }
@@ -127,38 +158,44 @@
     display: flex;
     align-items: center;
     justify-content: space-between;
-    margin-bottom: 20px;
+    margin-bottom: 22px;
     flex-wrap: wrap;
     gap: 12px;
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    padding: 18px 24px;
+    box-shadow: var(--shadow);
   }
   .panel-title {
     font-family: 'DM Serif Display', serif;
-    font-size: 1.8rem;
+    font-size: 1.6rem;
     letter-spacing: -0.03em;
   }
-  .panel-actions { display: flex; gap: 10px; flex-wrap: wrap; }
+  .panel-actions { display: flex; gap: 8px; flex-wrap: wrap; }
 
   .btn {
-    padding: 9px 20px;
+    padding: 9px 18px;
     border: none;
     border-radius: var(--radius-sm);
     font-family: 'DM Sans', sans-serif;
-    font-size: 0.85rem;
-    font-weight: 500;
+    font-size: 0.83rem;
+    font-weight: 600;
     cursor: pointer;
     transition: all 0.18s;
     display: flex;
     align-items: center;
     gap: 6px;
+    letter-spacing: 0.01em;
   }
-  .btn-primary { background: var(--text); color: #fff; }
-  .btn-primary:hover { background: #333; }
-  .btn-success { background: var(--present); color: #fff; }
-  .btn-success:hover { opacity: 0.88; }
-  .btn-outline { background: transparent; border: 1.5px solid var(--border); color: var(--text); }
-  .btn-outline:hover { border-color: var(--text); }
-  .btn-danger { background: var(--absent); color: #fff; }
-  .btn-danger:hover { opacity: 0.88; }
+  .btn-primary { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(91,143,201,0.25); }
+  .btn-primary:hover { background: #4a7eb8; box-shadow: 0 3px 12px rgba(91,143,201,0.35); }
+  .btn-success { background: var(--present); color: #fff; box-shadow: 0 2px 8px rgba(74,155,114,0.25); }
+  .btn-success:hover { background: #3d8862; }
+  .btn-outline { background: var(--surface); border: 1.5px solid var(--border); color: var(--text-muted); }
+  .btn-outline:hover { border-color: var(--accent); color: var(--accent); background: var(--accent-light); }
+  .btn-danger { background: var(--absent-bg); color: var(--absent); border: 1.5px solid #f0b4b4; }
+  .btn-danger:hover { background: var(--absent); color: #fff; }
 
   /* ---- CHAMADA SECTION ---- */
   .chamada-card {
@@ -168,6 +205,7 @@
     padding: 24px;
     margin-bottom: 28px;
     box-shadow: var(--shadow);
+    border-top: 3px solid var(--accent);
   }
   .chamada-card h3 {
     font-family: 'DM Serif Display', serif;
@@ -192,7 +230,7 @@
     color: var(--text);
     cursor: pointer;
   }
-  .date-input:focus { outline: none; border-color: var(--text); }
+  .date-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(91,143,201,0.12); }
 
   .chamada-grid {
     display: grid;
@@ -272,7 +310,7 @@
     color: var(--text);
     width: 240px;
   }
-  .search-input:focus { outline: none; border-color: var(--text); }
+  .search-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(91,143,201,0.10); }
 
   /* ---- STUDENT LIST (tabular) ---- */
   .students-list-wrap {
@@ -287,7 +325,7 @@
     border-collapse: collapse;
   }
   .students-list-table thead tr {
-    background: var(--surface2);
+    background: var(--accent-light);
     border-bottom: 1.5px solid var(--border);
   }
   .students-list-table thead th {
@@ -296,7 +334,7 @@
     font-weight: 700;
     text-transform: uppercase;
     letter-spacing: 0.07em;
-    color: var(--text-muted);
+    color: var(--accent);
     text-align: left;
     white-space: nowrap;
   }
@@ -307,7 +345,7 @@
     cursor: pointer;
   }
   .students-list-table tbody tr:last-child { border-bottom: none; }
-  .students-list-table tbody tr:hover { background: var(--bg); }
+  .students-list-table tbody tr:hover { background: var(--accent-light); }
   .students-list-table td {
     padding: 11px 14px;
     font-size: 0.88rem;
@@ -349,7 +387,7 @@
     color: var(--text-muted);
     transition: all 0.15s;
   }
-  .icon-btn:hover { background: var(--bg); color: var(--text); border-color: var(--text); }
+  .icon-btn:hover { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
   .icon-btn.danger:hover { background: var(--absent-bg); color: var(--absent); border-color: var(--absent); }
 
   .stat-mini {
@@ -364,7 +402,7 @@
   /* ---- MODAL ---- */
   .modal-overlay {
     position: fixed; inset: 0;
-    background: rgba(26,23,20,0.55);
+    background: rgba(44,58,82,0.45);
     z-index: 1000;
     display: none;
     align-items: center;
@@ -388,23 +426,25 @@
     to   { transform: translateY(0);    opacity: 1; }
   }
   .modal-header {
-    padding: 24px 28px 0;
+    padding: 22px 28px 18px;
     display: flex;
     align-items: flex-start;
     justify-content: space-between;
     gap: 12px;
+    border-bottom: 1.5px solid var(--border);
   }
   .modal-header h2 {
     font-family: 'DM Serif Display', serif;
-    font-size: 1.4rem;
+    font-size: 1.35rem;
+    color: var(--text);
   }
   .close-btn {
     background: none; border: none; cursor: pointer;
-    font-size: 1.2rem; color: var(--text-muted); padding: 2px 6px;
-    border-radius: 4px; transition: background 0.15s;
+    font-size: 1.1rem; color: var(--text-muted); padding: 4px 8px;
+    border-radius: var(--radius-sm); transition: all 0.15s;
   }
-  .close-btn:hover { background: var(--surface2); }
-  .modal-body { padding: 20px 28px 28px; }
+  .close-btn:hover { background: var(--absent-bg); color: var(--absent); }
+  .modal-body { padding: 20px 28px 24px; }
 
   .form-group { margin-bottom: 16px; }
   .form-group label { display: block; font-size: 0.82rem; font-weight: 600; margin-bottom: 6px; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
@@ -413,14 +453,18 @@
     border: 1.5px solid var(--border);
     border-radius: var(--radius-sm);
     font-family: 'DM Sans', sans-serif;
-    font-size: 0.92rem; background: var(--bg); color: var(--text);
+    font-size: 0.92rem; background: var(--surface2); color: var(--text);
+    transition: border-color 0.15s, box-shadow 0.15s;
   }
-  .form-input:focus { outline: none; border-color: var(--text); }
+  .form-input:focus { outline: none; border-color: var(--accent); box-shadow: 0 0 0 3px rgba(91,143,201,0.12); background: var(--surface); }
   textarea.form-input { min-height: 90px; resize: vertical; }
 
   .modal-footer {
-    padding: 0 28px 24px;
+    padding: 16px 28px 24px;
     display: flex; gap: 10px; justify-content: flex-end;
+    border-top: 1.5px solid var(--border);
+    background: var(--surface2);
+    border-radius: 0 0 var(--radius) var(--radius);
   }
 
   /* ---- STUDENT DETAIL MODAL ---- */
@@ -445,6 +489,7 @@
   }
   .detail-stat-card {
     background: var(--surface2);
+    border: 1.5px solid var(--border);
     border-radius: var(--radius-sm);
     padding: 14px;
     text-align: center;
@@ -457,39 +502,147 @@
   .detail-stat-card .lbl { font-size: 0.75rem; color: var(--text-muted); font-weight: 500; }
 
   .section-title {
-    font-size: 0.78rem;
+    font-size: 0.72rem;
     font-weight: 700;
     text-transform: uppercase;
-    letter-spacing: 0.07em;
-    color: var(--text-muted);
+    letter-spacing: 0.08em;
+    color: var(--accent);
     margin-bottom: 10px;
     margin-top: 20px;
-  }
-  .absence-list { display: flex; flex-direction: column; gap: 6px; }
-  .absence-item {
-    display: flex; align-items: center; justify-content: space-between;
-    padding: 8px 14px;
-    background: var(--surface2);
-    border-radius: var(--radius-sm);
-    font-size: 0.85rem;
-  }
-  .absence-item .date { font-weight: 600; }
-  .absence-item .type-badge {
-    padding: 2px 10px; border-radius: 50px; font-size: 0.75rem; font-weight: 700;
+    padding-bottom: 6px;
+    border-bottom: 1.5px solid var(--accent-light);
   }
   .badge-F { background: var(--absent-bg); color: var(--absent); }
   .badge-J { background: var(--justified-bg); color: var(--justified); }
 
+  /* ---- FREQUENCY CALENDAR ---- */
+  .freq-calendar-wrap {
+    background: var(--surface2);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    margin-bottom: 4px;
+  }
+  .freq-cal-header {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 10px 14px;
+    background: var(--surface);
+    border-bottom: 1.5px solid var(--border);
+  }
+  .freq-cal-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1rem;
+    text-transform: capitalize;
+    letter-spacing: -0.01em;
+  }
+  .freq-cal-nav {
+    display: flex; align-items: center; gap: 6px;
+  }
+  .freq-cal-nav button {
+    width: 28px; height: 28px;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    background: var(--surface);
+    cursor: pointer;
+    font-size: 0.85rem;
+    display: flex; align-items: center; justify-content: center;
+    color: var(--text-muted);
+    transition: all 0.15s;
+  }
+  .freq-cal-nav button:hover { background: var(--accent-light); color: var(--accent); border-color: var(--accent); }
+  .freq-cal-nav button:disabled { opacity: 0.3; cursor: default; pointer-events: none; }
+  .freq-cal-month-chip {
+    font-size: 0.75rem; font-weight: 700;
+    padding: 4px 12px;
+    border-radius: 50px;
+    border: 1.5px solid var(--border);
+    background: var(--surface);
+    color: var(--text-muted);
+    min-width: 100px; text-align: center;
+    text-transform: capitalize;
+  }
+  .freq-cal-body { padding: 12px 12px 14px; }
+  .freq-cal-weekdays {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 4px; margin-bottom: 5px;
+  }
+  .freq-cal-weekdays span {
+    text-align: center; font-size: 0.62rem; font-weight: 700;
+    text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted);
+    padding: 2px 0;
+  }
+  .freq-cal-grid {
+    display: grid; grid-template-columns: repeat(7, 1fr);
+    gap: 4px;
+  }
+  .freq-day {
+    aspect-ratio: 1;
+    border-radius: 6px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 0.73rem; font-weight: 600;
+    transition: transform 0.1s;
+    position: relative;
+    cursor: default;
+    user-select: none;
+  }
+  .freq-day:not(.freq-day-empty):not(.freq-day-none):hover { transform: scale(1.15); z-index: 1; }
+  .freq-day-empty { background: transparent; pointer-events: none; }
+  .freq-day-none { background: var(--bg); color: var(--border); border: 1px dashed var(--border); font-size:0.68rem; }
+  .freq-day-future { background: var(--bg); color: var(--border); border: 1px solid transparent; font-size: 0.7rem; opacity: 0.5; }
+  .freq-day-P {
+    background: var(--present-bg);
+    color: var(--present);
+    border: 1.5px solid #a8d8bc;
+  }
+  .freq-day-F {
+    background: var(--absent-bg);
+    color: var(--absent);
+    border: 1.5px solid #f0b4b4;
+    font-weight: 800;
+  }
+  .freq-day-J {
+    background: var(--justified-bg);
+    color: var(--justified);
+    border: 1.5px solid #e2ca7e;
+  }
+  .freq-cal-legend {
+    display: flex; gap: 10px; flex-wrap: wrap;
+    padding: 8px 14px 10px;
+    border-top: 1.5px solid var(--border);
+    background: var(--surface);
+    align-items: center;
+  }
+  .freq-cal-legend-item {
+    display: flex; align-items: center; gap: 5px;
+    font-size: 0.72rem; font-weight: 600; color: var(--text-muted);
+  }
+  .freq-cal-legend-dot {
+    width: 11px; height: 11px; border-radius: 3px;
+  }
+  .freq-cal-month-stats {
+    display: flex; gap: 8px; flex-wrap: wrap;
+    padding: 0 0 10px 0;
+    align-items: center;
+  }
+  .freq-cal-chip {
+    padding: 3px 10px; border-radius: 50px;
+    font-size: 0.72rem; font-weight: 700;
+  }
+  .freq-chip-p { background: var(--present-bg); color: var(--present); }
+  .freq-chip-f { background: var(--absent-bg); color: var(--absent); }
+  .freq-chip-j { background: var(--justified-bg); color: var(--justified); }
+  .freq-chip-pct { background: var(--accent-light); color: var(--accent); }
+
   .obs-list { display: flex; flex-direction: column; gap: 8px; }
   .obs-item {
     padding: 10px 14px;
-    background: var(--surface2);
-    border-left: 3px solid var(--border);
+    background: var(--accent-light);
+    border-left: 3px solid var(--accent);
     border-radius: 0 var(--radius-sm) var(--radius-sm) 0;
     font-size: 0.85rem;
     line-height: 1.5;
   }
-  .obs-item .obs-date { font-size: 0.75rem; color: var(--text-muted); margin-bottom: 3px; font-weight: 600; }
+  .obs-item .obs-date { font-size: 0.75rem; color: var(--accent); margin-bottom: 3px; font-weight: 600; }
 
   .empty-state {
     text-align: center; padding: 40px 20px;
@@ -510,6 +663,7 @@
     z-index: 2000;
     transform: translateY(80px); opacity: 0;
     transition: all 0.3s;
+    border-left: 4px solid var(--accent);
   }
   .toast.show { transform: translateY(0); opacity: 1; }
 
@@ -555,15 +709,16 @@
 
   .template-banner {
     display: flex; align-items: center; justify-content: space-between;
-    background: var(--accent-light); border: 1.5px solid #b8d9c4;
+    background: var(--present-bg); border: 1.5px solid #b8dfc9;
     border-radius: var(--radius-sm); padding: 12px 16px; margin-bottom: 18px; gap: 12px;
   }
   .template-banner span { font-size: 0.85rem; color: var(--present); flex: 1; }
   .btn-excel {
-    background: #1d6f42; color: #fff; padding: 7px 16px;
+    background: var(--present); color: #fff; padding: 7px 16px;
     border-radius: var(--radius-sm); font-size: 0.82rem; font-weight: 600;
     cursor: pointer; border: none; white-space: nowrap; font-family: 'DM Sans', sans-serif;
     display: flex; align-items: center; gap: 6px; transition: opacity 0.15s;
+    box-shadow: 0 2px 8px rgba(74,155,114,0.25);
   }
   .btn-excel:hover { opacity: 0.88; }
 
@@ -619,8 +774,8 @@
     font-size: 0.75rem;
     opacity: 0.75;
   }
-  .chamada-col-conv .chamada-col-header  { background: var(--surface2); color: var(--text); }
-  .chamada-col-nao  .chamada-col-header  { color: var(--text-muted); background: var(--bg); border: 1px dashed var(--border); }
+  .chamada-col-conv .chamada-col-header  { background: var(--present-bg); color: var(--present); }
+  .chamada-col-nao  .chamada-col-header  { color: var(--text-muted); background: var(--surface2); border: 1px dashed var(--border); }
 
   .rg-filter-bar { display: flex; align-items: center; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
   .rg-filter-bar span { font-size: 0.78rem; font-weight: 700; text-transform: uppercase; letter-spacing: 0.06em; color: var(--text-muted); margin-right: 4px; }
@@ -630,8 +785,8 @@
     cursor: pointer; background: var(--surface); color: var(--text-muted);
     transition: all 0.15s;
   }
-  .rg-filter-btn:hover { border-color: var(--text); color: var(--text); }
-  .rg-filter-btn.active { background: var(--text); color: #fff; border-color: transparent; }
+  .rg-filter-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .rg-filter-btn.active { background: var(--accent); color: #fff; border-color: transparent; box-shadow: 0 2px 8px rgba(91,143,201,0.25); }
 
   /* ---- REGISTRO GERAL ---- */
   .rg-wrap {
@@ -659,7 +814,7 @@
     z-index: 3;
   }
   .rg-table thead tr:first-child th {
-    background: var(--text);
+    background: var(--accent);
     color: #fff;
     padding: 8px 10px;
     font-size: 0.72rem;
@@ -667,27 +822,27 @@
     letter-spacing: 0.06em;
     text-transform: uppercase;
     white-space: nowrap;
-    border-right: 1px solid rgba(255,255,255,0.12);
+    border-right: 1px solid rgba(255,255,255,0.15);
   }
   .rg-table thead tr:first-child th.rg-month {
     text-align: center;
-    background: #2a2420;
+    background: #4a7eb8;
   }
   .rg-table thead tr:second-child th,
   .rg-table thead tr:nth-child(2) th {
-    background: #3a3530;
-    color: #e0d9ce;
+    background: #e8f1fb;
+    color: var(--accent);
     padding: 5px 6px;
     font-size: 0.7rem;
     font-weight: 700;
     text-align: center;
-    border-right: 1px solid rgba(255,255,255,0.10);
+    border-right: 1px solid rgba(91,143,201,0.15);
     white-space: nowrap;
   }
   .rg-table thead tr:nth-child(2) th.rg-type-header {
     font-size: 0.6rem;
     font-weight: 500;
-    color: rgba(255,255,255,0.45);
+    color: var(--text-muted);
     letter-spacing: 0;
     padding: 3px 4px;
   }
@@ -703,21 +858,21 @@
   .rg-table th.rg-fixed-2, .rg-table td.rg-fixed-2 { left: 136px; min-width: 52px; max-width: 52px; text-align: center; }
   /* shadow after last fixed col (now fixed-2) */
   .rg-table th.rg-fixed-2, .rg-table td.rg-fixed-2 {
-    box-shadow: 3px 0 6px rgba(26,23,20,0.10);
+    box-shadow: 3px 0 6px rgba(44,58,82,0.08);
   }
   /* thead fixed cells */
   .rg-table thead th.rg-fixed {
-    background: var(--text) !important;
+    background: var(--accent) !important;
     z-index: 5;
   }
   .rg-table thead tr:nth-child(2) th.rg-fixed {
-    background: #3a3530 !important;
+    background: #e8f1fb !important;
     z-index: 5;
   }
   /* body rows */
   .rg-table tbody tr { border-bottom: 1px solid var(--border); transition: background 0.12s; }
-  .rg-table tbody tr:hover { background: var(--bg) !important; }
-  .rg-table tbody tr:hover td.rg-fixed { background: var(--bg) !important; }
+  .rg-table tbody tr:hover { background: var(--accent-light) !important; }
+  .rg-table tbody tr:hover td.rg-fixed { background: var(--accent-light) !important; }
   .rg-table tbody tr:last-child { border-bottom: none; }
   .rg-table tbody td {
     padding: 7px 5px;
@@ -737,9 +892,9 @@
   }
   .rg-table tbody td.rg-fixed-2 { font-size: 0.75rem; color: var(--text-muted); background: var(--surface); }
   /* status cells */
-  .rg-cell-P { background: #e8f2eb; color: var(--present); font-weight: 700; font-size: 0.78rem; }
-  .rg-cell-F { background: #fceaea; color: var(--absent);  font-weight: 700; font-size: 0.78rem; }
-  .rg-cell-J { background: #fdf6e3; color: var(--justified); font-weight: 700; font-size: 0.78rem; }
+  .rg-cell-P { background: var(--present-bg); color: var(--present); font-weight: 700; font-size: 0.78rem; }
+  .rg-cell-F { background: var(--absent-bg); color: var(--absent);  font-weight: 700; font-size: 0.78rem; }
+  .rg-cell-J { background: var(--justified-bg); color: var(--justified); font-weight: 700; font-size: 0.78rem; }
   .rg-cell-empty { color: var(--border); font-size: 0.7rem; }
   /* summary totals column */
   .rg-totals-wrap { display: flex; gap: 3px; justify-content: center; align-items: center; }
@@ -750,9 +905,9 @@
   /* nao-convocado row tint */
   .rg-row-nao td.rg-fixed-1 { color: var(--text-muted); }
   /* alternating subtle stripe */
-  .rg-table tbody tr:nth-child(even) { background: #fbf9f6; }
+  .rg-table tbody tr:nth-child(even) { background: var(--surface2); }
   .rg-table tbody tr:nth-child(even) td.rg-fixed-1,
-  .rg-table tbody tr:nth-child(even) td.rg-fixed-2 { background: #fbf9f6; }
+  .rg-table tbody tr:nth-child(even) td.rg-fixed-2 { background: var(--surface2); }
   /* month group separator */
   .rg-table td.rg-month-sep, .rg-table th.rg-month-sep { border-left: 2px solid rgba(255,255,255,0.25); }
   .rg-table tbody td.rg-month-sep { border-left: 2px solid var(--border); }
@@ -790,10 +945,12 @@
     margin-bottom: 18px;
   }
   .kpi-box {
-    background: var(--surface2);
+    background: var(--surface);
+    border: 1.5px solid var(--border);
     border-radius: var(--radius-sm);
-    padding: 12px 8px;
+    padding: 14px 8px;
     text-align: center;
+    box-shadow: var(--shadow);
   }
   .kpi-box .kpi-num {
     font-family: 'DM Serif Display', serif;
@@ -807,7 +964,7 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.05em;
-    margin-top: 4px;
+    margin-top: 5px;
     display: block;
   }
   .chart-wrap { position: relative; height: 180px; }
@@ -818,17 +975,18 @@
     display: flex; align-items: center; gap: 12px;
     padding: 10px 14px;
     background: var(--absent-bg);
-    border: 1px solid #f5c6c6;
+    border: 1px solid #f0c4c4;
     border-left: 4px solid var(--absent);
     border-radius: var(--radius-sm);
     font-size: 0.85rem;
   }
-  .alert-item .alert-name { font-weight: 600; flex: 1; }
+  .alert-item .alert-name { font-weight: 600; flex: 1; color: var(--text); }
   .alert-item .alert-count { color: var(--absent); font-weight: 700; font-size: 0.9rem; white-space: nowrap; }
   .alert-empty {
     text-align: center; padding: 24px 16px;
     color: var(--present); font-size: 0.88rem; font-weight: 500;
     background: var(--present-bg); border-radius: var(--radius-sm);
+    border: 1px solid #b8dfc9;
   }
   .legend-row { display: flex; gap: 14px; flex-wrap: wrap; margin-top: 8px; justify-content: center; }
   .legend-dot { display: flex; align-items: center; gap: 5px; font-size: 0.78rem; color: var(--text-muted); font-weight: 500; }
@@ -840,56 +998,61 @@
   .convocado-toggle label {
     flex: 1; text-align: center; padding: 9px 12px; cursor: pointer;
     font-size: 0.85rem; font-weight: 600; transition: all 0.15s;
-    color: var(--text-muted); background: var(--bg); user-select: none;
+    color: var(--text-muted); background: var(--surface2); user-select: none;
   }
   .convocado-toggle label:first-of-type { border-right: 1px solid var(--border); }
   #convocadoSim:checked ~ label[for=convocadoSim],
   .convocado-toggle input#convocadoSim:checked + label {
-    background: #1d4d7a; color: #fff;
+    background: var(--accent); color: #fff;
   }
   #convocadoNao:checked ~ label[for=convocadoNao] { background: var(--surface2); color: var(--text); }
-  .conv-sim:checked + label { background: #1d4d7a !important; color: #fff !important; }
+  .conv-sim:checked + label { background: var(--accent) !important; color: #fff !important; }
   .conv-nao:checked + label { background: var(--surface2) !important; color: var(--text) !important; }
 
-  .badge-conv-sim { background: #ddeaf8; color: #1d4d7a; }
+  .badge-conv-sim { background: var(--accent-light); color: var(--accent); }
   .badge-conv-nao { background: var(--surface2); color: var(--text-muted); }
 
   /* ---- SUB-TABS (Chamada / Alunos) ---- */
   .sub-tabs {
     display: flex;
-    gap: 4px;
-    background: var(--surface2);
-    border-radius: 10px;
-    padding: 4px;
+    gap: 2px;
+    background: var(--surface);
+    border-radius: var(--radius);
+    padding: 5px;
     margin-bottom: 22px;
     width: fit-content;
+    border: 1.5px solid var(--border);
+    box-shadow: var(--shadow);
   }
   .sub-tab {
-    padding: 8px 22px;
-    border: none; border-radius: 7px;
-    font-family: 'DM Sans', sans-serif; font-size: 0.88rem; font-weight: 600;
+    padding: 8px 20px;
+    border: none; border-radius: 9px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.86rem; font-weight: 600;
     cursor: pointer; color: var(--text-muted); background: transparent;
     transition: all 0.18s;
+    white-space: nowrap;
   }
-  .sub-tab.active { background: var(--surface); color: var(--text); box-shadow: 0 1px 6px rgba(26,23,20,0.10); }
+  .sub-tab:hover { background: var(--surface2); color: var(--text); }
+  .sub-tab.active { background: var(--accent-light); color: var(--accent); box-shadow: 0 1px 4px rgba(91,143,201,0.15); }
 
   /* ---- CHAMADA LIST (row format) ---- */
   .chamada-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 16px; }
   .chamada-row {
     display: flex; align-items: center;
     padding: 10px 16px;
-    background: var(--surface2);
+    background: var(--surface);
     border: 1.5px solid var(--border);
     border-radius: var(--radius-sm);
     gap: 14px;
-    transition: border-color 0.15s;
+    transition: all 0.15s;
+    box-shadow: 0 1px 4px rgba(44,58,82,0.04);
   }
-  .chamada-row:hover { border-color: #c8c0b4; }
-  .chamada-row.status-P { border-left: 3.5px solid var(--present); }
-  .chamada-row.status-F { border-left: 3.5px solid var(--absent); }
-  .chamada-row.status-J { border-left: 3.5px solid var(--justified); }
+  .chamada-row:hover { border-color: var(--accent); box-shadow: 0 2px 8px rgba(91,143,201,0.10); }
+  .chamada-row.status-P { border-left: 3.5px solid var(--present); background: #fafffe; }
+  .chamada-row.status-F { border-left: 3.5px solid var(--absent); background: #fffafa; }
+  .chamada-row.status-J { border-left: 3.5px solid var(--justified); background: #fffdf5; }
   .chamada-row .row-num {
-    font-size: 0.75rem; font-weight: 700; color: var(--text-muted);
+    font-size: 0.72rem; font-weight: 700; color: var(--text-muted);
     min-width: 22px; text-align: right;
   }
   .chamada-row .row-name {
@@ -912,14 +1075,130 @@
     justify-content: flex-end;
     flex-shrink: 0;
   }
+
+  /* ---- ALUNOS DESISTENTES ---- */
+  .desistentes-section {
+    margin-top: 28px;
+  }
+  .desistentes-header {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 14px;
+    padding-bottom: 10px;
+    border-bottom: 2px dashed var(--absent);
+  }
+  .desistentes-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1.1rem;
+    color: var(--absent);
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .desistentes-count {
+    background: var(--absent-bg);
+    color: var(--absent);
+    padding: 3px 12px;
+    border-radius: 50px;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+  .desistentes-info {
+    font-size: 0.78rem;
+    color: var(--text-muted);
+    margin-left: auto;
+    font-style: italic;
+  }
+  .desistentes-list {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .desistente-row {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 12px 16px;
+    background: var(--absent-bg);
+    border: 1.5px solid #f5c6c6;
+    border-left: 4px solid var(--absent);
+    border-radius: var(--radius-sm);
+    transition: all 0.15s;
+  }
+  .desistente-row:hover { background: #fae0e0; }
+  .desistente-initials {
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    background: var(--absent);
+    display: flex; align-items: center; justify-content: center;
+    font-weight: 700; font-size: 0.78rem; color: #fff;
+    flex-shrink: 0;
+  }
+  .desistente-info-col {
+    flex: 1;
+    min-width: 0;
+  }
+  .desistente-name {
+    font-weight: 600;
+    font-size: 0.9rem;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  .desistente-meta {
+    font-size: 0.75rem;
+    color: var(--absent);
+    margin-top: 2px;
+    font-weight: 500;
+  }
+  .desistente-badge {
+    background: var(--absent);
+    color: #fff;
+    padding: 3px 10px;
+    border-radius: 50px;
+    font-size: 0.72rem;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+  .btn-retornar {
+    padding: 7px 16px;
+    background: var(--present);
+    color: #fff;
+    border: none;
+    border-radius: var(--radius-sm);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    cursor: pointer;
+    white-space: nowrap;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    transition: opacity 0.15s;
+    flex-shrink: 0;
+  }
+  .btn-retornar:hover { opacity: 0.88; }
+  .desistentes-empty {
+    text-align: center;
+    padding: 20px;
+    color: var(--present);
+    font-size: 0.85rem;
+    font-weight: 500;
+    background: var(--present-bg);
+    border-radius: var(--radius-sm);
+  }
 </style>
 </head>
 <body>
 
 <header>
-  <div>
-    <h1>📚 Chamada — Nivelamento</h1>
-    <span>Sistema de Controle de Presença</span>
+  <div class="header-left">
+    <div class="header-logo">📚</div>
+    <div>
+      <h1>Chamada — Nivelamento</h1>
+      <div class="header-subtitle">Sistema de Controle de Presença</div>
+    </div>
   </div>
   <div class="header-date" id="headerDate"></div>
 </header>
@@ -1118,10 +1397,10 @@
 <div class="toast" id="toast"></div>
 
 <!-- Firebase loading overlay -->
-<div id="fb-loading" style="position:fixed;inset:0;background:rgba(245,242,236,0.92);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;">
-  <div style="font-size:2rem;">&#x1F4DA;</div>
-  <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:#1a1714;">Carregando dados...</div>
-  <div style="font-size:0.82rem;color:#7a7168;">Conectando ao banco de dados</div>
+<div id="fb-loading" style="position:fixed;inset:0;background:rgba(240,244,248,0.95);z-index:9999;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:14px;">
+  <div style="width:52px;height:52px;background:linear-gradient(135deg,#5b8fc9,#4a9b72);border-radius:14px;display:flex;align-items:center;justify-content:center;font-size:1.6rem;box-shadow:0 4px 16px rgba(91,143,201,0.3);">📚</div>
+  <div style="font-family:'DM Serif Display',serif;font-size:1.3rem;color:#2c3a52;">Carregando dados...</div>
+  <div style="font-size:0.82rem;color:#8394ae;">Conectando ao banco de dados</div>
 </div>
 
 <script type="module">
@@ -1178,10 +1457,10 @@ function initials(name) {
   return name.trim().split(' ').slice(0,2).map(w=>w[0]||'').join('').toUpperCase();
 }
 
-const yearColors   = { 6: '#2d5a3d', 7: '#1d4d7a', 8: '#7a2d6b', 9: '#c4571a' };
+const yearColors   = { 6: '#4a9b72', 7: '#5b8fc9', 8: '#9b72c4', 9: '#e07b54' };
 const yearNames    = { 6: '6º Ano', 7: '7º Ano', 8: '8º Ano', 9: '9º Ano' };
 // Very light tint used for "não convocado" rows in chamada
-const yearNaoBg    = { 6: '#edf7f0', 7: '#e8f0f8', 8: '#f5eaf4', 9: '#fdf0e8' };
+const yearNaoBg    = { 6: '#f0faf5', 7: '#f0f6fc', 8: '#f7f0fd', 9: '#fdf4f0' };
 
 function sortStudents(year) {
   state.students[year].sort((a, b) => a.name.localeCompare(b.name, 'pt-BR', { sensitivity: 'base' }));
@@ -1234,6 +1513,7 @@ function renderPanel(year) {
 
   let P=0, F=0, J=0, N=0;
   students.forEach(s => {
+    if (isDesistente(year, s.id)) return; // exclui desistentes das estatísticas
     const key = `${date}_${year}_${s.id}`;
     const status = state.records[key];
     if (status === 'P') P++;
@@ -1242,8 +1522,8 @@ function renderPanel(year) {
     else if (s.convocado !== 'nao') N++; // só convocados entram como "não marcados"
   });
 
-  const convocados   = students.filter(s => s.convocado !== 'nao');
-  const naoConvocados = students.filter(s => s.convocado === 'nao');
+  const convocados   = students.filter(s => s.convocado !== 'nao' && !isDesistente(year, s.id));
+  const naoConvocados = students.filter(s => s.convocado === 'nao' && !isDesistente(year, s.id));
 
   // Build sequential global index preserving alphabetical order
   const globalIdx = new Map(students.map((s, i) => [s.id, i]));
@@ -1290,7 +1570,7 @@ function renderPanel(year) {
         <button class="btn btn-success" onclick="markAllPresent(${year})">✓ Todos Presentes</button>
         <button class="btn btn-danger" onclick="markAllAbsent(${year})">✗ Todos Ausentes</button>
         <button class="btn btn-outline" onclick="clearChamada(${year})" title="Limpar todos os registros do dia">🗑 Limpar Chamada</button>
-        <button class="btn" style="background:#1d4d7a;color:#fff;" onclick="exportRelatorio(${year})" title="Exportar relatório Excel">📊 Exportar Relatório</button>
+        <button class="btn" style="background:var(--accent-light);color:var(--accent);border:1.5px solid rgba(91,143,201,0.3);" onclick="exportRelatorio(${year})" title="Exportar relatório Excel">📊 Exportar Relatório</button>
       </div>
     </div>
 
@@ -1298,6 +1578,7 @@ function renderPanel(year) {
       <button class="sub-tab ${sub==='chamada'?'active':''}" onclick="switchSubTab(${year},'chamada')">📋 Chamada do Dia</button>
       <button class="sub-tab ${sub==='resumo'?'active':''}"  onclick="switchSubTab(${year},'resumo')">📊 Resumo</button>
       <button class="sub-tab ${sub==='alunos'?'active':''}"  onclick="switchSubTab(${year},'alunos')">👥 Alunos Cadastrados</button>
+      <button class="sub-tab ${sub==='desistentes'?'active':''}" onclick="switchSubTab(${year},'desistentes')" style="${getDesistentes(year).length > 0 ? 'color:var(--absent)' : ''}">🚪 Desistentes ${getDesistentes(year).length > 0 ? `<span style="background:var(--absent);color:#fff;border-radius:50px;padding:1px 7px;font-size:0.75rem;margin-left:4px;">${getDesistentes(year).length}</span>` : ''}</button>
       <button class="sub-tab ${sub==='registro'?'active':''}" onclick="switchSubTab(${year},'registro')">📅 Registro Geral</button>
     </div>
 
@@ -1308,7 +1589,7 @@ function renderPanel(year) {
         <span style="font-size:0.82rem;color:var(--text-muted)">${students.length} aluno(s)</span>
       </div>
       ${chamadaContent}
-    </div>` : sub === 'resumo' ? renderResumo(year) : sub === 'registro' ? renderRegistroGeral(year) : `
+    </div>` : sub === 'resumo' ? renderResumo(year) : sub === 'registro' ? renderRegistroGeral(year) : sub === 'desistentes' ? renderDesistentes(year) : `
     <div class="student-list-header">
       <span style="font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted)">Alunos Cadastrados</span>
       <input type="text" class="search-input" placeholder="🔍 Buscar aluno..." onInput="filterStudents(${year}, this.value)" id="search-${year}">
@@ -1339,9 +1620,10 @@ function renderPanel(year) {
 }
 
 function renderStudentCards(year, students) {
-  if (students.length === 0) return `<tr><td colspan="11"><div class="empty-state"><div class="icon">🎒</div>Sem alunos cadastrados.</div></td></tr>`;
+  const activeStudents = students.filter(s => !isDesistente(year, s.id));
+  if (activeStudents.length === 0) return `<tr><td colspan="11"><div class="empty-state"><div class="icon">🎒</div>Sem alunos cadastrados.</div></td></tr>`;
   const color = yearColors[year];
-  return students.map((s, idx) => {
+  return activeStudents.map((s, idx) => {
     const stats = getStudentStats(year, s.id);
     const pct = stats.total > 0 ? Math.round(stats.present / stats.total * 100) : null;
     const convocado = s.convocado !== 'nao';
@@ -1421,8 +1703,11 @@ function setStatus(year, sid, status) {
   } else {
     state.records[key] = status;
   }
+  // Verifica se algum aluno atingiu 8+ faltas F consecutivas
+  const moved = checkAndMoveDesistentes(year);
   save();
   renderPanel(year);
+  if (moved) showToast('⚠ Aluno(s) movido(s) para Desistentes (8+ faltas consecutivas).');
 }
 
 function changeDate(year, val) {
@@ -1443,13 +1728,14 @@ function markAllPresent(year) {
 function markAllAbsent(year) {
   const date = currentDate[year];
   state.students[year].forEach(s => {
-    if (s.convocado !== 'nao') {
+    if (s.convocado !== 'nao' && !isDesistente(year, s.id)) {
       state.records[`${date}_${year}_${s.id}`] = 'F';
     }
   });
+  const moved = checkAndMoveDesistentes(year);
   save();
   renderPanel(year);
-  showToast('Todos convocados marcados como ausentes!');
+  showToast('Todos convocados marcados como ausentes!' + (moved ? ' ⚠ Aluno(s) movido(s) para Desistentes.' : ''));
 }
 
 
@@ -1467,7 +1753,7 @@ function clearChamada(year) {
 
 // -------- REGISTRO GERAL --------
 function renderRegistroGeral(year) {
-  const allStudents = state.students[year];
+  const allStudents = state.students[year].filter(s => !isDesistente(year, s.id));
   if (allStudents.length === 0) {
     return `<div class="rg-wrap"><div class="rg-empty">👤 Nenhum aluno cadastrado ainda.</div></div>`;
   }
@@ -1600,8 +1886,96 @@ function getConsecutiveAbsences(year, sid) {
   return consecutive;
 }
 
+// -------- DESISTENTES --------
+// Conta faltas F consecutivas (apenas F, não J) para convocados
+function getConsecutiveFaltasConvocado(year, sid) {
+  const entries = Object.keys(state.records)
+    .filter(k => { const p=k.split('_'); return parseInt(p[1])===year && p[2]===sid; })
+    .map(k => ({ date: k.split('_')[0], status: state.records[k] }))
+    .sort((a,b) => b.date.localeCompare(a.date)); // newest first
+
+  let consecutive = 0;
+  for (const entry of entries) {
+    if (entry.status === 'F') consecutive++;
+    else break; // qualquer presença ou justificada interrompe a sequência
+  }
+  return consecutive;
+}
+
+function isDesistente(year, sid) {
+  const s = state.students[year].find(x => x.id === sid);
+  if (!s || s.convocado === 'nao') return false;
+  return s.desistente === true;
+}
+
+function getDesistentes(year) {
+  return (state.students[year] || []).filter(s => s.desistente === true);
+}
+
+// Verifica e move automaticamente alunos com 8+ faltas F consecutivas para desistentes
+function checkAndMoveDesistentes(year) {
+  let moved = false;
+  state.students[year].forEach(s => {
+    if (s.convocado === 'nao' || s.desistente) return;
+    const consec = getConsecutiveFaltasConvocado(year, s.id);
+    if (consec >= 8) {
+      s.desistente = true;
+      s.desistenteDate = today();
+      s.desistenteFaltas = consec;
+      moved = true;
+    }
+  });
+  return moved;
+}
+
+function retornarDesistente(year, sid) {
+  const s = state.students[year].find(x => x.id === sid);
+  if (!s) return;
+  // Marca presença na data atual e remove o status de desistente
+  const key = `${today()}_${year}_${sid}`;
+  state.records[key] = 'P';
+  s.desistente = false;
+  delete s.desistenteDate;
+  delete s.desistenteFaltas;
+  save();
+  renderPanel(year);
+  showToast(`✅ ${s.name} retornou à chamada!`);
+}
+
+function renderDesistentes(year) {
+  const lista = getDesistentes(year);
+  const color = yearColors[year];
+
+  const listHTML = lista.length === 0
+    ? `<div class="desistentes-empty">✅ Nenhum aluno na lista de desistentes.</div>`
+    : lista.map(s => {
+        const consec = s.desistenteFaltas || getConsecutiveFaltasConvocado(year, s.id);
+        const dataStr = s.desistenteDate ? ` · movido em ${formatDate(s.desistenteDate)}` : '';
+        return `
+        <div class="desistente-row">
+          <div class="desistente-initials">${initials(s.name)}</div>
+          <div class="desistente-info-col">
+            <div class="desistente-name">${s.name}</div>
+            <div class="desistente-meta">⚠ ${consec} falta(s) consecutiva(s)${dataStr}${s.serie ? ` · ${s.serie}` : ''}${s.turma ? ` – ${s.turma}` : ''}</div>
+          </div>
+          <span class="desistente-badge">Desistente</span>
+          <button class="btn-retornar" onclick="retornarDesistente(${year},'${s.id}')">✓ Registrar Presença</button>
+        </div>`;
+      }).join('');
+
+  return `
+  <div class="desistentes-section">
+    <div class="desistentes-header">
+      <span class="desistentes-title">🚪 Alunos Desistentes</span>
+      ${lista.length > 0 ? `<span class="desistentes-count">${lista.length} aluno(s)</span>` : ''}
+      <span class="desistentes-info">Convocados com 8+ faltas consecutivas · ao marcar presença, retornam à chamada</span>
+    </div>
+    <div class="desistentes-list">${listHTML}</div>
+  </div>`;
+}
+
 function renderResumo(year) {
-  const students = state.students[year];
+  const students = state.students[year].filter(s => !isDesistente(year, s.id));
   const color = yearColors[year];
 
   if (students.length === 0) {
@@ -1648,7 +2022,7 @@ function renderResumo(year) {
     ? `<div class="alert-empty">✅ Nenhum aluno com 5+ faltas consecutivas!</div>`
     : alertStudents.map(({s, consec}) => `
         <div class="alert-item">
-          <div class="student-initials" style="background:${color};width:32px;height:32px;font-size:0.75rem;">${initials(s.name)}</div>
+          <div class="sl-initials" style="background:${color};width:32px;height:32px;font-size:0.75rem;">${initials(s.name)}</div>
           <span class="alert-name">${s.name}</span>
           <span class="alert-count">⚠ ${consec} consecutiva${consec>1?'s':''}</span>
         </div>`).join('');
@@ -1698,7 +2072,7 @@ function renderResumo(year) {
       <h4>🔔 Convocados × Não Convocados</h4>
       <div style="display:flex;gap:18px;align-items:center;margin-top:8px;">
         <div class="kpi-box" style="flex:1">
-          <span class="kpi-num" style="color:#1d4d7a">${nConv}</span>
+          <span class="kpi-num" style="color:var(--accent)">${nConv}</span>
           <span class="kpi-lbl">Convocados</span>
         </div>
         <div class="kpi-box" style="flex:1">
@@ -1724,8 +2098,8 @@ function renderResumo(year) {
         data: {
           labels: topFaltas.map(x => x.name),
           datasets: [
-            { label: 'Faltas', data: topFaltas.map(x => x.stats.absences), backgroundColor: '#fceaea', borderColor: '#b83232', borderWidth: 1.5, borderRadius: 4 },
-            { label: 'Presenças', data: topFaltas.map(x => x.stats.present), backgroundColor: '#e8f2eb', borderColor: '#2d5a3d', borderWidth: 1.5, borderRadius: 4 },
+            { label: 'Faltas', data: topFaltas.map(x => x.stats.absences), backgroundColor: '#fceaea', borderColor: '#d96b6b', borderWidth: 1.5, borderRadius: 4 },
+            { label: 'Presenças', data: topFaltas.map(x => x.stats.present), backgroundColor: '#e6f5ee', borderColor: '#4a9b72', borderWidth: 1.5, borderRadius: 4 },
           ]
         },
         options: {
@@ -1744,7 +2118,7 @@ function renderResumo(year) {
         type: 'doughnut',
         data: {
           labels: ['Presentes', 'Faltas', 'Justificadas'],
-          datasets: [{ data: [totalP, totalF, totalJ], backgroundColor: ['#2d5a3d','#b83232','#c4880a'], borderWidth: 0, hoverOffset: 6 }]
+          datasets: [{ data: [totalP, totalF, totalJ], backgroundColor: ['#4a9b72','#d96b6b','#c49a3c'], borderWidth: 0, hoverOffset: 6 }]
         },
         options: {
           responsive: true, maintainAspectRatio: true,
@@ -1966,6 +2340,9 @@ function saveObs() {
 }
 
 // -------- DETAIL --------
+// Tracks the current calendar month per open detail modal
+let detailCalState = { year: null, sid: null, calYear: null, calMonth: null };
+
 function openDetail(year, sid) {
   const s = state.students[year].find(x=>x.id===sid);
   const stats = getStudentStats(year, sid);
@@ -1974,13 +2351,23 @@ function openDetail(year, sid) {
 
   document.getElementById('detailTitle').textContent = s.name;
 
-  const absenceHTML = stats.absenceDates.length === 0
-    ? '<div class="empty-state" style="padding:16px 0"><div class="icon">✅</div>Nenhuma falta registrada.</div>'
-    : `<div class="absence-list">${stats.absenceDates.map(a=>`
-        <div class="absence-item">
-          <span class="date">${formatDate(a.date)}</span>
-          <span class="type-badge badge-${a.type}">${a.type === 'F' ? 'Falta' : 'Justificada'}</span>
-        </div>`).join('')}</div>`;
+  // Determine default month: the most recent month with any record, or current month
+  const allDates = Object.keys(state.records)
+    .filter(k => { const p=k.split('_'); return parseInt(p[1])===year && p[2]===sid; })
+    .map(k => k.split('_')[0])
+    .sort();
+
+  const now = new Date();
+  let calYear  = now.getFullYear();
+  let calMonth = now.getMonth(); // 0-indexed
+
+  if (allDates.length > 0) {
+    const last = allDates[allDates.length - 1];
+    calYear  = parseInt(last.split('-')[0]);
+    calMonth = parseInt(last.split('-')[1]) - 1;
+  }
+
+  detailCalState = { year, sid, calYear, calMonth };
 
   const obsHTML = (!s.obs || s.obs.length === 0)
     ? '<div class="empty-state" style="padding:16px 0"><div class="icon">💬</div>Nenhuma observação.</div>'
@@ -2013,20 +2400,133 @@ function openDetail(year, sid) {
         <span class="lbl">Faltas</span>
       </div>
       <div class="detail-stat-card">
-        <span class="num" style="color:var(--text)">${pct}${stats.total>0?'%':''}</span>
+        <span class="num" style="color:${pct==='-'?'var(--text-muted)':pct>=75?'var(--present)':pct>=50?'var(--justified)':'var(--absent)'}">${pct}${stats.total>0?'%':''}</span>
         <span class="lbl">Frequência</span>
       </div>
     </div>
     ${stats.justified > 0 ? `<div style="text-align:center;margin-bottom:12px;font-size:0.83rem;color:var(--justified)">⚠ ${stats.justified} falta(s) justificada(s)</div>` : ''}
-    <div class="section-title">Registro de Faltas</div>
-    ${absenceHTML}
+    <div class="section-title">Calendário de Frequência</div>
+    <div id="freqCalendarContainer"></div>
     <div class="section-title">Observações</div>
     ${obsHTML}
     <div style="margin-top:20px;text-align:right;">
       <button class="btn btn-outline" onclick="closeModal('modalDetail');openObsModal(${year},'${sid}')">+ Adicionar Observação</button>
     </div>
   `;
+
+  renderDetailCalendar();
   openModal('modalDetail');
+}
+
+function renderDetailCalendar() {
+  const { year, sid, calYear, calMonth } = detailCalState;
+  const container = document.getElementById('freqCalendarContainer');
+  if (!container) return;
+
+  // Build record map for this student
+  const recordMap = {};
+  Object.keys(state.records).forEach(key => {
+    const parts = key.split('_');
+    if (parseInt(parts[1]) === year && parts[2] === sid) {
+      recordMap[parts[0]] = state.records[key];
+    }
+  });
+
+  const today = new Date();
+  const firstDay = new Date(calYear, calMonth, 1);
+  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
+  const startDow = firstDay.getDay(); // 0=Sun
+
+  const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
+  const weekDays = ['D','S','T','Q','Q','S','S'];
+
+  // Determine bounds: earliest and latest months with any record
+  const allDateKeys = Object.keys(recordMap).sort();
+  let minYear = calYear, minMonth = calMonth;
+  let maxYear = today.getFullYear(), maxMonth = today.getMonth();
+  if (allDateKeys.length > 0) {
+    const first = allDateKeys[0].split('-');
+    minYear = parseInt(first[0]); minMonth = parseInt(first[1]) - 1;
+  }
+
+  const isPrevDisabled = (calYear < minYear) || (calYear === minYear && calMonth <= minMonth);
+  const isNextDisabled = (calYear > maxYear) || (calYear === maxYear && calMonth >= maxMonth);
+
+  // Month stats
+  let mP=0, mF=0, mJ=0;
+  for (let d=1; d<=daysInMonth; d++) {
+    const key = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const v = recordMap[key];
+    if (v==='P') mP++; else if (v==='F') mF++; else if (v==='J') mJ++;
+  }
+  const mTotal = mP + mF + mJ;
+  const mPct = mTotal > 0 ? Math.round(mP / mTotal * 100) : null;
+
+  // Build day cells
+  let cells = '';
+  // Empty slots before first day
+  for (let i=0; i<startDow; i++) cells += `<div class="freq-day freq-day-empty"></div>`;
+
+  for (let d=1; d<=daysInMonth; d++) {
+    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const cellDate = new Date(calYear, calMonth, d);
+    const isFuture = cellDate > today;
+    const v = recordMap[dateStr];
+    let cls, title;
+    if (isFuture) {
+      cls = 'freq-day-future'; title = '';
+    } else if (!v) {
+      cls = 'freq-day-none'; title = 'Sem registro';
+    } else if (v === 'P') {
+      cls = 'freq-day-P'; title = 'Presente';
+    } else if (v === 'F') {
+      cls = 'freq-day-F'; title = 'Falta';
+    } else {
+      cls = 'freq-day-J'; title = 'Justificada';
+    }
+    cells += `<div class="freq-day ${cls}" title="${title ? d + ' — ' + title : d}">${d}</div>`;
+  }
+
+  const statsHTML = mTotal > 0 ? `
+    <div class="freq-cal-month-stats">
+      <span class="freq-cal-chip freq-chip-p">✓ ${mP} pres.</span>
+      <span class="freq-cal-chip freq-chip-f">✗ ${mF} falt.</span>
+      ${mJ > 0 ? `<span class="freq-cal-chip freq-chip-j">⚠ ${mJ} just.</span>` : ''}
+      ${mPct !== null ? `<span class="freq-cal-chip freq-chip-pct">${mPct}% freq.</span>` : ''}
+    </div>` : `<div style="font-size:0.78rem;color:var(--text-muted);padding-bottom:10px;">Nenhum registro neste mês.</div>`;
+
+  container.innerHTML = `
+    <div class="freq-calendar-wrap">
+      <div class="freq-cal-header">
+        <span class="freq-cal-title">${monthNames[calMonth]} ${calYear}</span>
+        <div class="freq-cal-nav">
+          <button onclick="detailCalNav(-1)" ${isPrevDisabled?'disabled':''}title="Mês anterior">‹</button>
+          <span class="freq-cal-month-chip">${monthNames[calMonth].substring(0,3)} ${calYear}</span>
+          <button onclick="detailCalNav(1)" ${isNextDisabled?'disabled':''}title="Próximo mês">›</button>
+        </div>
+      </div>
+      <div class="freq-cal-body">
+        ${statsHTML}
+        <div class="freq-cal-weekdays">${weekDays.map(w=>`<span>${w}</span>`).join('')}</div>
+        <div class="freq-cal-grid">${cells}</div>
+      </div>
+      <div class="freq-cal-legend">
+        <div class="freq-cal-legend-item"><div class="freq-cal-legend-dot" style="background:var(--present-bg);border:1.5px solid #a8d8bc;"></div> Presente</div>
+        <div class="freq-cal-legend-item"><div class="freq-cal-legend-dot" style="background:var(--absent-bg);border:1.5px solid #f0b4b4;"></div> Falta</div>
+        <div class="freq-cal-legend-item"><div class="freq-cal-legend-dot" style="background:var(--justified-bg);border:1.5px solid #e2ca7e;"></div> Justificada</div>
+        <div class="freq-cal-legend-item"><div class="freq-cal-legend-dot" style="background:var(--bg);border:1px dashed var(--border);"></div> Sem registro</div>
+      </div>
+    </div>`;
+}
+
+function detailCalNav(dir) {
+  let { calYear, calMonth } = detailCalState;
+  calMonth += dir;
+  if (calMonth < 0) { calMonth = 11; calYear--; }
+  if (calMonth > 11) { calMonth = 0; calYear++; }
+  detailCalState.calYear  = calYear;
+  detailCalState.calMonth = calMonth;
+  renderDetailCalendar();
 }
 
 // -------- UTILS --------
@@ -2271,6 +2771,7 @@ updateHeaderDate();
   }
 
   [6,7,8,9].forEach(y => sortStudents(y));
+  [6,7,8,9].forEach(y => checkAndMoveDesistentes(y)); // verifica ao carregar
   renderAll();
   document.getElementById('fb-loading').style.display = 'none';
 })();
@@ -2283,9 +2784,10 @@ Object.assign(window, {
   closeModal, openObsModal, saveObs,
   openEditModal, confirmEditStudent,
   openDeleteModal, confirmDelete,
-  openDetail,
+  openDetail, detailCalNav,
   setStatus, markAllPresent, markAllAbsent, clearChamada,
   changeDate, filterStudents,
+  retornarDesistente,
   exportRelatorio, showToast
 });
 
