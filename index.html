@@ -1710,10 +1710,14 @@ function renderStudentCards(year, students) {
   if (activeStudents.length === 0) return `<tr><td colspan="11"><div class="empty-state"><div class="icon">🎒</div>Sem alunos cadastrados.</div></td></tr>`;
   const color = yearColors[year];
   return activeStudents.map((s, idx) => {
-    const stats = getStudentStats(year, s.id);
+    const stats = getStudentStatsEffective(year, s.id, s);
     const pct = stats.total > 0 ? Math.round(stats.present / stats.total * 100) : null;
     const convocado = s.convocado !== 'nao';
     const freqColor = pct === null ? 'var(--text-muted)' : pct >= 75 ? 'var(--present)' : pct >= 50 ? 'var(--justified)' : 'var(--absent)';
+    const isPairing = (year === 6 || year === 7 || year === 8 || year === 9) && convocado;
+    const pairingBadge = isPairing
+      ? `<div style="font-size:0.7rem;color:var(--accent);margin-top:1px;">${(year === 6 || year === 7) ? 'regra seg+ter / qua+sex' : 'regra seg+ter'}</div>`
+      : '';
     return `
     <tr onclick="openDetail(${year},'${s.id}')">
       <td class="sl-num">${idx + 1}</td>
@@ -1722,6 +1726,7 @@ function renderStudentCards(year, students) {
       </td>
       <td>
         <div class="sl-name">${s.name}</div>
+        ${pairingBadge}
       </td>
       <td>
         <div style="font-size:0.85rem;white-space:nowrap;">${s.serie ? s.serie.replace(/º Ano/i, 'º') : '—'}${s.turma ? `<span style="color:var(--text-muted)">${s.turma}</span>` : ''}</div>
@@ -1761,11 +1766,116 @@ function filterStudents(year, query) {
 }
 
 // -------- STATS --------
+
+// Returns raw records for a student as sorted entries [{date, status}]
+function getStudentEntries(year, sid) {
+  return Object.keys(state.records)
+    .filter(k => { const p=k.split('_'); return parseInt(p[1])===year && p[2]===sid; })
+    .map(k => ({ date: k.split('_')[0], status: state.records[k] }))
+    .sort((a,b) => a.date.localeCompare(b.date));
+}
+
+// ISO week number helper (Mon=1 … Sun=7)
+function isoWeek(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const thursday = new Date(d);
+  thursday.setDate(d.getDate() + (4 - (d.getDay() || 7)));
+  const yearStart = new Date(thursday.getFullYear(), 0, 1);
+  return Math.ceil(((thursday - yearStart) / 86400000 + 1) / 7);
+}
+
+function isoWeekYear(dateStr) {
+  const d = new Date(dateStr + 'T12:00:00');
+  const thursday = new Date(d);
+  thursday.setDate(d.getDate() + (4 - (d.getDay() || 7)));
+  return thursday.getFullYear();
+}
+
+function weekKey(dateStr) {
+  return `${isoWeekYear(dateStr)}-W${String(isoWeek(dateStr)).padStart(2,'0')}`;
+}
+
+function dayOfWeek(dateStr) {
+  // 0=Sun,1=Mon,...,6=Sat
+  return new Date(dateStr + 'T12:00:00').getDay();
+}
+
+// Collapses one pair of weekdays (dowA, dowB) within each ISO week into a single effective entry.
+// Rule: if either day has P → 1 presence; if both absent → 1 absence (F beats J).
+// Days outside the pair are passed through unchanged.
+// pairLabel: e.g. 'seg-ter' or 'qua-sex' — used only for the collapsed entry marker.
+function collapsePair(entries, dowA, dowB, pairLabel) {
+  const weeks = {}; // weekKey -> { a: status|null, b: status|null, aDate, bDate }
+
+  entries.forEach(e => {
+    const dow = dayOfWeek(e.date);
+    const wk  = weekKey(e.date);
+    if (dow === dowA || dow === dowB) {
+      if (!weeks[wk]) weeks[wk] = { a: null, b: null, aDate: null, bDate: null };
+      if (dow === dowA) { weeks[wk].a = e.status; weeks[wk].aDate = e.date; }
+      else              { weeks[wk].b = e.status; weeks[wk].bDate = e.date; }
+    }
+  });
+
+  const collapsed = [];
+
+  // Pass through days not in this pair
+  entries.forEach(e => {
+    const dow = dayOfWeek(e.date);
+    if (dow !== dowA && dow !== dowB) collapsed.push(e);
+  });
+
+  // One effective entry per week that had records for this pair
+  Object.entries(weeks).forEach(([wk, w]) => {
+    const hasP = w.a === 'P' || w.b === 'P';
+    const representativeDate = w.aDate || w.bDate;
+    if (hasP) {
+      collapsed.push({ date: representativeDate, status: 'P', collapsed: pairLabel });
+    } else {
+      const status = (w.a === 'F' || w.b === 'F') ? 'F' : 'J';
+      collapsed.push({ date: representativeDate, status, collapsed: pairLabel });
+    }
+  });
+
+  return collapsed.sort((a,b) => a.date.localeCompare(b.date));
+}
+
+// Returns effective stats applying the pairing rules per year/convocado:
+//   6º/7º convocados → pair1: Mon+Tue (dow 1+2), pair2: Wed+Fri (dow 3+5)
+//   8º/9º convocados → pair1: Mon+Tue (dow 1+2) only
+//   others           → raw records unchanged
+function getStudentStatsEffective(year, sid, student) {
+  const raw = getStudentEntries(year, sid);
+  const isConvocado = student && student.convocado !== 'nao';
+
+  let entries = raw;
+  if (isConvocado) {
+    if (year === 8 || year === 9) {
+      // Single pair: Mon+Tue
+      entries = collapsePair(raw, 1, 2, 'seg-ter');
+    } else if (year === 6 || year === 7) {
+      // Two independent pairs: Mon+Tue and Wed+Fri
+      const afterPair1 = collapsePair(raw, 1, 2, 'seg-ter');
+      entries = collapsePair(afterPair1, 3, 5, 'qua-sex');
+    }
+  }
+
+  let present=0, absences=0, justified=0, total=0;
+  const absenceDates = [];
+  entries.forEach(e => {
+    total++;
+    if (e.status === 'P') present++;
+    else if (e.status === 'F') { absences++; absenceDates.push({ date: e.date, type:'F' }); }
+    else if (e.status === 'J') { justified++; absenceDates.push({ date: e.date, type:'J' }); }
+  });
+  return { present, absences, justified, total, absenceDates: absenceDates.sort((a,b)=>b.date.localeCompare(a.date)) };
+}
+
+// Original raw stats (used only for Registro Geral visual — unchanged)
 function getStudentStats(year, sid) {
   let present=0, absences=0, justified=0, total=0;
   const absenceDates = [];
   Object.keys(state.records).forEach(key => {
-    // Key format: "YYYY-MM-DD_year_id" — split gives exactly 3 parts
     const parts = key.split('_');
     const recDate = parts[0];
     const recYear = parseInt(parts[1]);
@@ -1793,7 +1903,7 @@ function setStatus(year, sid, status) {
   const moved = checkAndMoveDesistentes(year);
   save();
   renderPanel(year);
-  if (moved) showToast('⚠ Aluno(s) movido(s) para Desistentes (8+ faltas consecutivas).');
+  if (moved) showToast('⚠ Aluno(s) movido(s) para Desistentes (4+ faltas consecutivas).');
 }
 
 function changeDate(year, val) {
@@ -2198,27 +2308,42 @@ function printRegistroGeral(year) {
   win.focus();
 }
 function getConsecutiveAbsences(year, sid) {
-  // Keys: "YYYY-MM-DD_year_id" — split on '_' gives [date, year, id]
-  const entries = Object.keys(state.records)
-    .filter(k => { const p=k.split('_'); return parseInt(p[1])===year && p[2]===sid; })
-    .map(k => ({ date: k.split('_')[0], status: state.records[k] }))
-    .sort((a,b) => b.date.localeCompare(a.date)); // newest first
+  const s = state.students[year].find(x => x.id === sid);
+  const raw = getStudentEntries(year, sid);
+  const isConvocado = s && s.convocado !== 'nao';
+  let effective = raw;
+  if (isConvocado) {
+    if (year === 8 || year === 9) {
+      effective = collapsePair(raw, 1, 2, 'seg-ter');
+    } else if (year === 6 || year === 7) {
+      effective = collapsePair(collapsePair(raw, 1, 2, 'seg-ter'), 3, 5, 'qua-sex');
+    }
+  }
+  const entries = effective.sort((a,b) => b.date.localeCompare(a.date)); // newest first
 
   let consecutive = 0;
   for (const entry of entries) {
     if (entry.status === 'F' || entry.status === 'J') consecutive++;
-    else break; // any presence breaks the streak
+    else break;
   }
   return consecutive;
 }
 
 // -------- DESISTENTES --------
-// Conta faltas F consecutivas (apenas F, não J) para convocados
+// Conta faltas F consecutivas (apenas F, não J) para convocados — com pairing para todos os anos
 function getConsecutiveFaltasConvocado(year, sid) {
-  const entries = Object.keys(state.records)
-    .filter(k => { const p=k.split('_'); return parseInt(p[1])===year && p[2]===sid; })
-    .map(k => ({ date: k.split('_')[0], status: state.records[k] }))
-    .sort((a,b) => b.date.localeCompare(a.date)); // newest first
+  const s = state.students[year].find(x => x.id === sid);
+  const raw = getStudentEntries(year, sid);
+  const isConvocado = s && s.convocado !== 'nao';
+  let effective = raw;
+  if (isConvocado) {
+    if (year === 8 || year === 9) {
+      effective = collapsePair(raw, 1, 2, 'seg-ter');
+    } else if (year === 6 || year === 7) {
+      effective = collapsePair(collapsePair(raw, 1, 2, 'seg-ter'), 3, 5, 'qua-sex');
+    }
+  }
+  const entries = effective.sort((a,b) => b.date.localeCompare(a.date)); // newest first
 
   let consecutive = 0;
   for (const entry of entries) {
@@ -2238,13 +2363,13 @@ function getDesistentes(year) {
   return (state.students[year] || []).filter(s => s.desistente === true);
 }
 
-// Verifica e move automaticamente alunos com 8+ faltas F consecutivas para desistentes
+// Verifica e move automaticamente alunos com 4+ faltas F consecutivas para desistentes
 function checkAndMoveDesistentes(year) {
   let moved = false;
   state.students[year].forEach(s => {
     if (s.convocado === 'nao' || s.desistente) return;
     const consec = getConsecutiveFaltasConvocado(year, s.id);
-    if (consec >= 8) {
+    if (consec >= 4) {
       s.desistente = true;
       s.desistenteDate = today();
       s.desistenteFaltas = consec;
@@ -2294,7 +2419,7 @@ function renderDesistentes(year) {
     <div class="desistentes-header">
       <span class="desistentes-title">🚪 Alunos Desistentes</span>
       ${lista.length > 0 ? `<span class="desistentes-count">${lista.length} aluno(s)</span>` : ''}
-      <span class="desistentes-info">Convocados com 8+ faltas consecutivas · ao marcar presença, retornam à chamada</span>
+      <span class="desistentes-info">Convocados com 4+ faltas consecutivas · ao marcar presença, retornam à chamada</span>
     </div>
     <div class="desistentes-list">${listHTML}</div>
   </div>`;
@@ -2330,7 +2455,7 @@ function getIrregularityScore(year, sid) {
 function classifyStudents(year, students) {
   const convocados = students.filter(s => s.convocado !== 'nao');
   const result = convocados.map(s => {
-    const st = getStudentStats(year, s.id);
+    const st = getStudentStatsEffective(year, s.id, s);
     const total = st.total;
     const pct = total > 0 ? Math.round(st.present / total * 100) : null;
     const consec = getConsecutiveAbsences(year, s.id);
@@ -2365,7 +2490,7 @@ function renderResumo(year) {
   let totalP=0, totalF=0, totalJ=0;
   let freqP=0, freqTotal=0;
   students.forEach(s => {
-    const st = getStudentStats(year, s.id);
+    const st = getStudentStatsEffective(year, s.id, s);
     totalP += st.present;
     totalF += st.absences;
     totalJ += st.justified;
@@ -2875,9 +3000,14 @@ let detailCalState = { year: null, sid: null, calYear: null, calMonth: null };
 
 function openDetail(year, sid) {
   const s = state.students[year].find(x=>x.id===sid);
-  const stats = getStudentStats(year, sid);
+  const stats = getStudentStatsEffective(year, sid, s);
   const color = yearColors[year];
   const pct = stats.total > 0 ? Math.round(stats.present/stats.total*100) : '-';
+  const isPairing = (year === 6 || year === 7 || year === 8 || year === 9) && s.convocado !== 'nao';
+  const pairingLabel = (year === 6 || year === 7) ? '📅 Regra Seg+Ter / Qua+Sex' : '📅 Regra Seg+Ter';
+  const pairingNote  = (year === 6 || year === 7)
+    ? 'Contagem por semana: seg+ter = 1 chamada · qua+sex = 1 chamada'
+    : 'Contagem por semana: segunda e terça valem juntas como 1 chamada';
 
   document.getElementById('detailTitle').textContent = s.name;
 
@@ -2912,11 +3042,12 @@ function openDetail(year, sid) {
       <div class="detail-initials" style="background:${color}">${initials(s.name)}</div>
       <div>
         <div style="font-size:0.82rem;color:var(--text-muted)">${yearNames[year]}${s.serie ? ` · ${s.serie}${s.turma ? ` – Turma ${s.turma}` : ''}` : ''}</div>
-        <div style="margin-top:6px;">
+        <div style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;align-items:center;">
           <span class="stat-mini ${s.convocado !== 'nao' ? 'badge-conv-sim' : 'badge-conv-nao'}" style="display:inline-block;padding:3px 12px;border-radius:50px;font-size:0.78rem;font-weight:700;">${s.convocado !== 'nao' ? '🔔 Convocado' : 'Não Convocado'}</span>
+          ${isPairing ? `<span style="background:var(--accent-light);color:var(--accent);border:1px solid rgba(91,143,201,0.3);padding:3px 10px;border-radius:50px;font-size:0.72rem;font-weight:700;">${pairingLabel}</span>` : ''}
         </div>
         <div style="margin-top:6px;font-size:0.85rem;">
-          ${stats.total > 0 ? `<span style="color:var(--text-muted)">${stats.total} chamada(s) realizada(s)</span>` : '<span style="color:var(--text-muted)">Sem chamadas ainda</span>'}
+          ${stats.total > 0 ? `<span style="color:var(--text-muted)">${stats.total} chamada(s) efetiva(s)</span>` : '<span style="color:var(--text-muted)">Sem chamadas ainda</span>'}
         </div>
       </div>
     </div>
@@ -2935,6 +3066,7 @@ function openDetail(year, sid) {
       </div>
     </div>
     ${stats.justified > 0 ? `<div style="text-align:center;margin-bottom:12px;font-size:0.83rem;color:var(--justified)">⚠ ${stats.justified} falta(s) justificada(s)</div>` : ''}
+    ${isPairing ? `<div style="text-align:center;margin-bottom:12px;font-size:0.78rem;color:var(--accent);background:var(--accent-light);padding:6px 12px;border-radius:var(--radius-sm);">📅 ${pairingNote}</div>` : ''}
     <div class="section-title">Calendário de Frequência</div>
     <div id="freqCalendarContainer"></div>
     <div class="section-title">Observações</div>
