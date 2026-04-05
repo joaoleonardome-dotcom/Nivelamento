@@ -633,6 +633,85 @@
   .freq-chip-j { background: var(--justified-bg); color: var(--justified); }
   .freq-chip-pct { background: var(--accent-light); color: var(--accent); }
 
+  /* ---- BEHAVIORAL ANALYSIS ---- */
+  .beh-card-irregular {
+    border-top: 3px solid var(--absent) !important;
+  }
+  .beh-card-assiduo {
+    border-top: 3px solid var(--present) !important;
+  }
+  .beh-card-header {
+    display: flex; align-items: flex-start; gap: 12px; margin-bottom: 14px;
+  }
+  .beh-card-icon { font-size: 1.5rem; line-height: 1; margin-top: 2px; }
+  .beh-card-title {
+    font-family: 'DM Serif Display', serif;
+    font-size: 1rem; color: var(--text);
+    display: flex; align-items: center; gap: 8px;
+  }
+  .beh-card-sub {
+    font-size: 0.78rem; color: var(--text-muted); margin-top: 3px; line-height: 1.4;
+  }
+  .beh-count-badge {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.72rem; font-weight: 700;
+    padding: 2px 9px; border-radius: 50px;
+    display: inline-block;
+  }
+  .beh-badge-irr  { background: var(--absent-bg); color: var(--absent); }
+  .beh-badge-ok   { background: var(--present-bg); color: var(--present); }
+  .beh-list { display: flex; flex-direction: column; gap: 6px; }
+  .beh-row {
+    display: grid;
+    grid-template-columns: 32px 1fr 40px;
+    grid-template-rows: auto auto;
+    column-gap: 10px;
+    align-items: center;
+    padding: 10px 12px;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface2);
+    position: relative;
+  }
+  .beh-row-ok { background: #f8fdf9; border-color: #cceedd; }
+  .beh-row-nunca { opacity: 0.7; }
+  .beh-info { grid-column: 2; grid-row: 1; }
+  .beh-name { font-size: 0.86rem; font-weight: 600; color: var(--text); }
+  .beh-meta { display: flex; flex-wrap: wrap; gap: 4px; margin-top: 4px; }
+  .beh-pct {
+    grid-column: 3; grid-row: 1;
+    font-family: 'DM Serif Display', serif;
+    font-size: 1rem; font-weight: 700;
+    text-align: right; line-height: 1;
+  }
+  .beh-bar-wrap {
+    grid-column: 1 / -1; grid-row: 2;
+    background: var(--border);
+    border-radius: 4px; height: 4px; margin-top: 6px;
+    overflow: hidden;
+  }
+  .beh-bar-fill {
+    height: 100%; border-radius: 4px;
+    transition: width 0.4s ease;
+  }
+  .beh-chip {
+    font-size: 0.7rem; font-weight: 700;
+    padding: 2px 8px; border-radius: 50px;
+    white-space: nowrap;
+  }
+  .beh-chip-p    { background: var(--present-bg); color: var(--present); }
+  .beh-chip-f    { background: var(--absent-bg); color: var(--absent); }
+  .beh-chip-f-sm { background: #fdf5f5; color: #c48888; border: 1px solid #f0d4d4; }
+  .beh-chip-warn { background: #fff3e0; color: #e07b54; border: 1px solid #fdd5b4; }
+  .beh-chip-consec { background: var(--absent-bg); color: var(--absent); border: 1px solid #f0b4b4; }
+  .beh-chip-perfect { background: var(--present-bg); color: var(--present); border: 1px solid #a8d8bc; }
+  .beh-empty {
+    text-align: center; padding: 18px 12px;
+    font-size: 0.85rem; color: var(--present);
+    background: var(--present-bg); border-radius: var(--radius-sm);
+    border: 1px solid #b8dfc9;
+  }
+
   .obs-list { display: flex; flex-direction: column; gap: 8px; }
   .obs-item {
     padding: 10px 14px;
@@ -787,6 +866,13 @@
   }
   .rg-filter-btn:hover { border-color: var(--accent); color: var(--accent); }
   .rg-filter-btn.active { background: var(--accent); color: #fff; border-color: transparent; box-shadow: 0 2px 8px rgba(91,143,201,0.25); }
+  .rg-print-btn {
+    padding: 6px 16px; border: 1.5px solid var(--accent); border-radius: 50px;
+    font-family: 'DM Sans', sans-serif; font-size: 0.82rem; font-weight: 600;
+    cursor: pointer; background: var(--accent-light); color: var(--accent);
+    transition: all 0.15s; margin-left: auto;
+  }
+  .rg-print-btn:hover { background: var(--accent); color: #fff; box-shadow: 0 2px 8px rgba(91,143,201,0.3); }
 
   /* ---- REGISTRO GERAL ---- */
   .rg-wrap {
@@ -1785,6 +1871,7 @@ function renderRegistroGeral(year) {
     <button class="rg-filter-btn ${filter === 'conv'  ? 'active' : ''}" onclick="setRgFilter(${year},'conv')">🔔 Convocados (${nConv})</button>
     <button class="rg-filter-btn ${filter === 'nao'   ? 'active' : ''}" onclick="setRgFilter(${year},'nao')">Não Convocados (${nNao})</button>
     <button class="rg-filter-btn ${filter === 'todos' ? 'active' : ''}" onclick="setRgFilter(${year},'todos')">Todos (${allStudents.length})</button>
+    <button class="rg-print-btn" onclick="printRegistroGeral(${year})" title="Imprimir registro atual">🖨️ Imprimir</button>
   </div>`;
 
   if (students.length === 0) {
@@ -1870,7 +1957,246 @@ function renderRegistroGeral(year) {
   </div>`;
 }
 
-// -------- RESUMO TAB --------
+// -------- PRINT REGISTRO GERAL --------
+function printRegistroGeral(year) {
+  const allStudents = state.students[year].filter(s => !isDesistente(year, s.id));
+  if (allStudents.length === 0) { showToast('Nenhum aluno cadastrado.'); return; }
+
+  const datesSet = new Set();
+  Object.keys(state.records).forEach(key => {
+    const parts = key.split('_');
+    if (parseInt(parts[1]) === year) datesSet.add(parts[0]);
+  });
+  const dates = Array.from(datesSet).sort();
+  if (dates.length === 0) { showToast('Nenhuma chamada registrada ainda.'); return; }
+
+  const filter = rgFilter[year] || 'conv';
+  const students = filter === 'todos' ? allStudents
+    : filter === 'nao' ? allStudents.filter(s => s.convocado === 'nao')
+    : allStudents.filter(s => s.convocado !== 'nao');
+
+  if (students.length === 0) { showToast('Nenhum aluno nesta categoria.'); return; }
+
+  const filterLabel = filter === 'conv' ? 'Convocados' : filter === 'nao' ? 'Não Convocados' : 'Todos os Alunos';
+
+  // Group dates by month
+  const monthGroups = [];
+  dates.forEach(d => {
+    const [y, m] = d.split('-');
+    const label = new Date(d + 'T12:00:00').toLocaleDateString('pt-BR', { month: 'short', year: '2-digit' })
+                                            .replace('.', '').replace(' de ', '/');
+    const last = monthGroups[monthGroups.length - 1];
+    if (!last || last.key !== `${y}-${m}`) {
+      monthGroups.push({ key: `${y}-${m}`, label: label.charAt(0).toUpperCase() + label.slice(1), dates: [d] });
+    } else {
+      last.dates.push(d);
+    }
+  });
+
+  // Build header rows
+  const fixedTh = `<th class="pr-fixed pr-num">#</th><th class="pr-fixed pr-name">Nome</th><th class="pr-fixed pr-turma">Turma</th>`;
+  const monthTh = monthGroups.map((mg, i) =>
+    `<th class="pr-month${i > 0 ? ' pr-msep' : ''}" colspan="${mg.dates.length}">${mg.label.toUpperCase()}</th>`
+  ).join('');
+  const dayTh = (() => {
+    let s = '';
+    monthGroups.forEach((mg, mi) => {
+      mg.dates.forEach((d, di) => {
+        s += `<th class="pr-day${mi > 0 && di === 0 ? ' pr-msep' : ''}">${parseInt(d.split('-')[2])}</th>`;
+      });
+    });
+    return s;
+  })();
+
+  // Totals header
+  const totalsTh = `<th class="pr-tot-header" colspan="3">Total</th>`;
+  const totalsDayTh = `<th class="pr-tot-p">P</th><th class="pr-tot-f">F</th><th class="pr-tot-j">J</th>`;
+
+  // Build body rows + column totals accumulator
+  const colTotals = {}; // date -> {P,F,J}
+  dates.forEach(d => { colTotals[d] = {P:0,F:0,J:0}; });
+
+  const bodyRows = students.map((s, idx) => {
+    const st = getStudentStats(year, s.id);
+    const turmaLabel = s.turma
+      ? `${s.serie ? s.serie.replace('º Ano','') + 'º' : ''}${s.turma}`
+      : (s.serie ? s.serie.replace('º Ano', 'º') : '—');
+    const pct = st.total > 0 ? Math.round(st.present / st.total * 100) : null;
+    const freqStr = pct !== null ? `${pct}%` : '—';
+
+    let cells = '';
+    monthGroups.forEach((mg, mi) => {
+      mg.dates.forEach((d, di) => {
+        const key = `${d}_${year}_${s.id}`;
+        const v = state.records[key] || '';
+        if (v) colTotals[d][v] = (colTotals[d][v] || 0) + 1;
+        const cls = v === 'P' ? 'pr-P' : v === 'F' ? 'pr-F' : v === 'J' ? 'pr-J' : 'pr-empty';
+        const msep = mi > 0 && di === 0 ? ' pr-msep' : '';
+        cells += `<td class="pr-cell ${cls}${msep}">${v || '·'}</td>`;
+      });
+    });
+
+    const rowClass = idx % 2 === 0 ? 'pr-row-even' : 'pr-row-odd';
+    const pctColor = pct === null ? '#999' : pct >= 75 ? '#4a9b72' : pct >= 50 ? '#c49a3c' : '#d96b6b';
+    return `<tr class="${rowClass}">
+      <td class="pr-fixed pr-num">${idx + 1}</td>
+      <td class="pr-fixed pr-name">${s.name}</td>
+      <td class="pr-fixed pr-turma">${turmaLabel}</td>
+      ${cells}
+      <td class="pr-tot-val pr-P">${st.present}</td>
+      <td class="pr-tot-val pr-F">${st.absences}</td>
+      <td class="pr-tot-val" style="color:#c49a3c;font-weight:700;">${st.justified > 0 ? st.justified : '—'}</td>
+    </tr>`;
+  }).join('');
+
+  // Column totals footer row
+  let footCells = '';
+  monthGroups.forEach((mg, mi) => {
+    mg.dates.forEach((d, di) => {
+      const t = colTotals[d];
+      const msep = mi > 0 && di === 0 ? ' pr-msep' : '';
+      // Show dominant value in footer
+      const tot = t.P + t.F + t.J;
+      const txt = tot > 0 ? `${t.P}P` : '—';
+      footCells += `<td class="pr-foot${msep}" title="P:${t.P} F:${t.F} J:${t.J}">${t.P > 0 ? t.P : '—'}</td>`;
+    });
+  });
+
+  const now = new Date().toLocaleDateString('pt-BR', { day:'2-digit', month:'long', year:'numeric' });
+
+  const html = `<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>Registro Geral — ${yearNames[year]} — ${filterLabel}</title>
+<style>
+  @page { size: landscape; margin: 12mm 10mm; }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: 'Segoe UI', Arial, sans-serif; color: #2c3a52; background: #fff; font-size: 9pt; }
+
+  .print-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 10px; padding-bottom: 8px; border-bottom: 2px solid #5b8fc9; }
+  .print-header-left h1 { font-size: 14pt; font-weight: 700; color: #5b8fc9; letter-spacing: -0.02em; }
+  .print-header-left h2 { font-size: 10pt; font-weight: 600; color: #2c3a52; margin-top: 2px; }
+  .print-header-left .ph-sub { font-size: 8pt; color: #8394ae; margin-top: 3px; }
+  .print-header-right { text-align: right; font-size: 8pt; color: #8394ae; line-height: 1.6; }
+
+  .legend { display: flex; gap: 14px; margin-bottom: 8px; align-items: center; flex-wrap: wrap; }
+  .legend-item { display: flex; align-items: center; gap: 4px; font-size: 7.5pt; font-weight: 600; }
+  .legend-dot { width: 10px; height: 10px; border-radius: 2px; }
+
+  table { border-collapse: collapse; width: 100%; table-layout: auto; }
+  thead { position: sticky; top: 0; }
+
+  /* Header rows */
+  thead tr:first-child th { background: #5b8fc9; color: #fff; padding: 5px 4px; font-size: 7.5pt; font-weight: 700; text-align: center; white-space: nowrap; letter-spacing: 0.04em; border-right: 1px solid rgba(255,255,255,0.2); }
+  thead tr:nth-child(2) th { background: #e8f1fb; color: #5b8fc9; padding: 3px 3px; font-size: 7pt; font-weight: 700; text-align: center; border-right: 1px solid #c8d8ee; }
+
+  .pr-fixed { }
+  .pr-num   { width: 22px; text-align: center; }
+  .pr-name  { text-align: left; padding-left: 6px !important; min-width: 130px; max-width: 180px; }
+  .pr-turma { text-align: center; width: 36px; }
+  .pr-month { background: #4a7eb8 !important; text-align: center; }
+  .pr-msep  { border-left: 2px solid rgba(255,255,255,0.35) !important; }
+  .pr-day   { font-size: 6.5pt; width: 14px; min-width: 14px; text-align: center; padding: 2px 1px; }
+
+  .pr-tot-header { background: #2c3a52 !important; color: #fff !important; text-align: center; }
+  .pr-tot-p { background: #2c3a52 !important; color: #a8d8bc !important; font-size: 7pt; font-weight: 700; text-align: center; }
+  .pr-tot-f { background: #2c3a52 !important; color: #f0b4b4 !important; font-size: 7pt; font-weight: 700; text-align: center; }
+
+  /* Body cells */
+  tbody td { padding: 3px 2px; text-align: center; border-right: 1px solid #e8edf4; border-bottom: 1px solid #e8edf4; font-size: 7.5pt; font-weight: 600; vertical-align: middle; }
+  tbody td.pr-name { text-align: left; padding-left: 6px; font-weight: 500; font-size: 8pt; white-space: nowrap; overflow: hidden; }
+  tbody td.pr-num  { color: #8394ae; font-size: 7pt; }
+  tbody td.pr-turma { font-size: 7.5pt; color: #8394ae; }
+
+  .pr-cell { font-size: 7pt; }
+  .pr-P    { color: #4a9b72; background: #edf8f2; }
+  .pr-F    { color: #d96b6b; background: #fdf0f0; font-weight: 800; }
+  .pr-J    { color: #c49a3c; background: #fdf6e3; }
+  .pr-empty { color: #ccd4e0; }
+
+  .pr-tot-val { font-weight: 800; font-size: 8pt; border-left: 1px solid #c8d8ee; }
+
+  .pr-row-even { background: #fff; }
+  .pr-row-odd  { background: #f7f9fc; }
+  tbody tr:hover { background: #edf4ff; }
+
+  /* Footer totals row */
+  tfoot tr td { background: #f0f4f8; font-size: 7pt; font-weight: 700; color: #4a9b72; padding: 3px 2px; border-top: 2px solid #5b8fc9; text-align: center; }
+  tfoot td.pr-name { color: #2c3a52; text-align: left; padding-left: 6px; font-size: 7.5pt; }
+  tfoot td.pr-foot.pr-msep { border-left: 2px solid #5b8fc9; }
+
+  .print-footer { margin-top: 10px; font-size: 7.5pt; color: #8394ae; display: flex; justify-content: space-between; border-top: 1px solid #dde3ed; padding-top: 6px; }
+
+  @media print {
+    body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+    .no-print { display: none !important; }
+  }
+  .no-print { margin-bottom: 12px; }
+  .btn-print-now { padding: 8px 20px; background: #5b8fc9; color: #fff; border: none; border-radius: 6px; font-size: 10pt; font-weight: 600; cursor: pointer; margin-right: 8px; }
+  .btn-close-pw  { padding: 8px 16px; background: #f0f4f8; color: #2c3a52; border: 1px solid #dde3ed; border-radius: 6px; font-size: 10pt; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="no-print">
+  <button class="btn-print-now" onclick="window.print()">🖨️ Imprimir / Salvar PDF</button>
+  <button class="btn-close-pw" onclick="window.close()">✕ Fechar</button>
+</div>
+
+<div class="print-header">
+  <div class="print-header-left">
+    <h1>📋 Registro Geral de Frequência</h1>
+    <h2>${yearNames[year]} — ${filterLabel}</h2>
+    <div class="ph-sub">${students.length} aluno(s) · ${dates.length} chamada(s) registrada(s) · ${monthGroups.length} mês(es)</div>
+  </div>
+  <div class="print-header-right">
+    <div><strong>Nivelamento Escolar</strong></div>
+    <div>Gerado em ${now}</div>
+  </div>
+</div>
+
+<div class="legend">
+  <span style="font-size:7.5pt;font-weight:700;color:#8394ae;margin-right:4px;">LEGENDA:</span>
+  <div class="legend-item"><div class="legend-dot" style="background:#4a9b72"></div> P — Presente</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#d96b6b"></div> F — Falta</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#c49a3c"></div> J — Justificada</div>
+  <div class="legend-item"><div class="legend-dot" style="background:#e0e5ef"></div> · — Não registrado</div>
+</div>
+
+<table>
+  <thead>
+    <tr>${fixedTh}${monthTh}${totalsTh}</tr>
+    <tr>
+      <th class="pr-num">#</th>
+      <th class="pr-name">Nome</th>
+      <th class="pr-turma">Turma</th>
+      ${dayTh}
+      ${totalsDayTh}
+    </tr>
+  </thead>
+  <tbody>${bodyRows}</tbody>
+  <tfoot>
+    <tr>
+      <td colspan="2" class="pr-name">Presenças do dia</td>
+      <td></td>
+      ${footCells}
+      <td colspan="3"></td>
+    </tr>
+  </tfoot>
+</table>
+
+<div class="print-footer">
+  <span>Nivelamento Escolar — ${yearNames[year]} — ${filterLabel}</span>
+  <span>Gerado em ${now}</span>
+</div>
+</body>
+</html>`;
+
+  const win = window.open('', '_blank', 'width=1100,height=700');
+  win.document.write(html);
+  win.document.close();
+  win.focus();
+}
 function getConsecutiveAbsences(year, sid) {
   // Keys: "YYYY-MM-DD_year_id" — split on '_' gives [date, year, id]
   const entries = Object.keys(state.records)
@@ -1974,6 +2300,59 @@ function renderDesistentes(year) {
   </div>`;
 }
 
+// -------- BEHAVIORAL ANALYSIS HELPERS --------
+
+// Calculates max "run" of F/J between two presences — detects "comes once, disappears" pattern
+function getIrregularityScore(year, sid) {
+  const entries = Object.keys(state.records)
+    .filter(k => { const p=k.split('_'); return parseInt(p[1])===year && p[2]===sid; })
+    .map(k => ({ date: k.split('_')[0], status: state.records[k] }))
+    .sort((a,b) => a.date.localeCompare(b.date));
+
+  if (entries.length < 2) return 0;
+
+  let maxRun = 0, currentRun = 0;
+  let presencesSeen = 0;
+  for (const e of entries) {
+    if (e.status === 'P') {
+      presencesSeen++;
+      maxRun = Math.max(maxRun, currentRun);
+      currentRun = 0;
+    } else {
+      currentRun++;
+    }
+  }
+  maxRun = Math.max(maxRun, currentRun);
+  return { maxRun, presencesSeen };
+}
+
+// Classifica comportamento de cada convocado com dados ricos
+function classifyStudents(year, students) {
+  const convocados = students.filter(s => s.convocado !== 'nao');
+  const result = convocados.map(s => {
+    const st = getStudentStats(year, s.id);
+    const total = st.total;
+    const pct = total > 0 ? Math.round(st.present / total * 100) : null;
+    const consec = getConsecutiveAbsences(year, s.id);
+    const irreg = total >= 2 ? getIrregularityScore(year, s.id) : { maxRun: 0, presencesSeen: 0 };
+
+    let category;
+    if (total === 0) {
+      category = 'sem-dados';
+    } else if (st.present === 0) {
+      category = 'nunca-veio';
+    } else if (pct >= 75) {
+      category = 'assiduo';
+    } else {
+      // Irregular: has presences but low frequency
+      category = 'irregular';
+    }
+
+    return { s, st, pct, consec, irreg, category };
+  });
+  return result;
+}
+
 function renderResumo(year) {
   const students = state.students[year].filter(s => !isDesistente(year, s.id));
   const color = yearColors[year];
@@ -1984,7 +2363,7 @@ function renderResumo(year) {
 
   // Global stats across all dates — frequency only counts convocados
   let totalP=0, totalF=0, totalJ=0;
-  let freqP=0, freqTotal=0; // for frequency calculation (convocados only)
+  let freqP=0, freqTotal=0;
   students.forEach(s => {
     const st = getStudentStats(year, s.id);
     totalP += st.present;
@@ -2004,20 +2383,36 @@ function renderResumo(year) {
     .filter(x => x.consec >= 5)
     .sort((a,b) => b.consec - a.consec);
 
-  // Attendance per student for bar chart
-  const topFaltas = [...students]
-    .map(s => { const parts=s.name.trim().split(' '); return { name: parts.length>1?parts[0]+' '+parts[parts.length-1]:parts[0], stats: getStudentStats(year, s.id) }; })
-    .filter(x => x.stats.total > 0)
-    .sort((a,b) => b.stats.absences - a.stats.absences)
-    .slice(0, 10);
+  // Behavioral classification (convocados only)
+  const classified = classifyStudents(year, students);
+  const assíduos    = classified.filter(x => x.category === 'assiduo').sort((a,b) => b.pct - a.pct);
+  const irregulares = classified.filter(x => x.category === 'irregular').sort((a,b) => a.pct - b.pct);
+  const nuncaVieram = classified.filter(x => x.category === 'nunca-veio');
 
-  const chartId  = `chart-bar-${year}`;
-  const donutId  = `chart-donut-${year}`;
+  // Attendance per student for bar chart — irregulares sorted by pct asc, top 10
+  const chartId   = `chart-bar-${year}`;
+  const donutId   = `chart-donut-${year}`;
+  const freqDistId= `chart-freqdist-${year}`;
 
   // Convocados vs não-convocados
   const nConv = students.filter(s => s.convocado !== 'nao').length;
   const nNao  = students.length - nConv;
 
+  // Short name helper
+  function shortName(name) {
+    const parts = name.trim().split(' ');
+    return parts.length > 1 ? parts[0] + ' ' + parts[parts.length-1] : parts[0];
+  }
+
+  // Frequency color
+  function freqColor(pct) {
+    if (pct === null) return 'var(--text-muted)';
+    if (pct >= 75) return 'var(--present)';
+    if (pct >= 50) return 'var(--justified)';
+    return 'var(--absent)';
+  }
+
+  // Alert list HTML
   const alertHTML = alertStudents.length === 0
     ? `<div class="alert-empty">✅ Nenhum aluno com 5+ faltas consecutivas!</div>`
     : alertStudents.map(({s, consec}) => `
@@ -2027,33 +2422,164 @@ function renderResumo(year) {
           <span class="alert-count">⚠ ${consec} consecutiva${consec>1?'s':''}</span>
         </div>`).join('');
 
+  // Irregulares list HTML — the core list the teacher cares about
+  function irregRow(x) {
+    const { s, st, pct, consec, irreg } = x;
+    const maxRun = irreg.maxRun || 0;
+    const pres   = irreg.presencesSeen || 0;
+    const ratio  = st.present > 0 && st.total > 0 ? (st.absences / st.present).toFixed(1) : '—';
+    return `
+      <div class="beh-row">
+        <div class="sl-initials" style="background:${color};width:32px;height:32px;font-size:0.75rem;flex-shrink:0;">${initials(s.name)}</div>
+        <div class="beh-info">
+          <div class="beh-name">${s.name}</div>
+          <div class="beh-meta">
+            <span class="beh-chip beh-chip-f">✗ ${st.absences} faltas</span>
+            <span class="beh-chip beh-chip-p">✓ ${st.present} pres.</span>
+            ${maxRun >= 3 ? `<span class="beh-chip beh-chip-warn">até ${maxRun} faltas seguidas</span>` : ''}
+            ${consec >= 3 ? `<span class="beh-chip beh-chip-consec">${consec} consec. agora</span>` : ''}
+          </div>
+        </div>
+        <div class="beh-pct" style="color:${freqColor(pct)}">${pct}%</div>
+        <div class="beh-bar-wrap">
+          <div class="beh-bar-fill" style="width:${pct}%;background:${freqColor(pct)};"></div>
+        </div>
+      </div>`;
+  }
+
+  // Assíduos list HTML
+  function assidRow(x) {
+    const { s, st, pct } = x;
+    return `
+      <div class="beh-row beh-row-ok">
+        <div class="sl-initials" style="background:${color};width:32px;height:32px;font-size:0.75rem;flex-shrink:0;">${initials(s.name)}</div>
+        <div class="beh-info">
+          <div class="beh-name">${s.name}</div>
+          <div class="beh-meta">
+            <span class="beh-chip beh-chip-p">✓ ${st.present} presenças</span>
+            ${st.absences > 0 ? `<span class="beh-chip beh-chip-f-sm">✗ ${st.absences} falta${st.absences>1?'s':''}</span>` : '<span class="beh-chip beh-chip-perfect">★ sem faltas</span>'}
+          </div>
+        </div>
+        <div class="beh-pct" style="color:${freqColor(pct)}">${pct}%</div>
+        <div class="beh-bar-wrap">
+          <div class="beh-bar-fill" style="width:${pct}%;background:${freqColor(pct)};"></div>
+        </div>
+      </div>`;
+  }
+
+  const irregularesHTML = irregulares.length === 0
+    ? `<div class="beh-empty">✅ Nenhum aluno irregular no momento.</div>`
+    : irregulares.map(irregRow).join('');
+
+  const assíduosHTML = assíduos.length === 0
+    ? `<div class="beh-empty" style="color:var(--text-muted);">Nenhum aluno assíduo ainda.</div>`
+    : assíduos.map(assidRow).join('');
+
+  const nuncaVieramHTML = nuncaVieram.length === 0
+    ? `<div class="beh-empty" style="color:var(--text-muted);">Nenhum aluno nessa situação.</div>`
+    : nuncaVieram.map(x => `
+        <div class="beh-row beh-row-nunca">
+          <div class="sl-initials" style="background:#b0bec5;width:32px;height:32px;font-size:0.75rem;flex-shrink:0;">${initials(x.s.name)}</div>
+          <div class="beh-info">
+            <div class="beh-name" style="color:var(--text-muted)">${x.s.name}</div>
+            <div class="beh-meta"><span class="beh-chip beh-chip-f">✗ ${x.st.absences} faltas registradas</span></div>
+          </div>
+          <div class="beh-pct" style="color:var(--absent)">0%</div>
+          <div class="beh-bar-wrap"><div class="beh-bar-fill" style="width:0%;"></div></div>
+        </div>`).join('');
+
+  // Frequency distribution buckets for bar chart
+  const buckets = { '0%': 0, '1–24%': 0, '25–49%': 0, '50–74%': 0, '75–89%': 0, '90–100%': 0 };
+  classified.filter(x => x.category !== 'sem-dados').forEach(x => {
+    const p = x.pct;
+    if (p === 0) buckets['0%']++;
+    else if (p < 25) buckets['1–24%']++;
+    else if (p < 50) buckets['25–49%']++;
+    else if (p < 75) buckets['50–74%']++;
+    else if (p < 90) buckets['75–89%']++;
+    else buckets['90–100%']++;
+  });
+
   const html = `
-  <div class="kpi-row">
+  <div class="kpi-row" style="grid-template-columns:repeat(5,1fr)">
     <div class="kpi-box">
-      <span class="kpi-num" style="color:var(--text)">${students.length}</span>
-      <span class="kpi-lbl">Alunos</span>
+      <span class="kpi-num" style="color:var(--text)">${nConv}</span>
+      <span class="kpi-lbl">Convocados</span>
     </div>
     <div class="kpi-box">
-      <span class="kpi-num" style="color:var(--present)">${totalP}</span>
-      <span class="kpi-lbl">Presenças</span>
-    </div>
-    <div class="kpi-box">
-      <span class="kpi-num" style="color:var(--absent)">${totalF}</span>
-      <span class="kpi-lbl">Faltas</span>
-    </div>
-    <div class="kpi-box">
-      <span class="kpi-num" style="color:${freqGeral===null?'var(--text-muted)':freqGeral>=75?'var(--present)':freqGeral>=50?'var(--justified)':'var(--absent)'}">${freqGeral!==null?freqGeral+'%':'—'}</span>
+      <span class="kpi-num" style="color:${freqGeral===null?'var(--text-muted)':freqColor(freqGeral)}">${freqGeral!==null?freqGeral+'%':'—'}</span>
       <span class="kpi-lbl">Freq. Geral</span>
+    </div>
+    <div class="kpi-box">
+      <span class="kpi-num" style="color:var(--present)">${assíduos.length}</span>
+      <span class="kpi-lbl">Assíduos ≥75%</span>
+    </div>
+    <div class="kpi-box">
+      <span class="kpi-num" style="color:var(--absent)">${irregulares.length}</span>
+      <span class="kpi-lbl">Irregulares</span>
+    </div>
+    <div class="kpi-box">
+      <span class="kpi-num" style="color:var(--text-muted)">${nuncaVieram.length}</span>
+      <span class="kpi-lbl">Nunca vieram</span>
     </div>
   </div>
 
+  <!-- IRREGULARES — destaque principal -->
+  <div class="resumo-card beh-card-irregular" style="margin-bottom:18px;">
+    <div class="beh-card-header">
+      <span class="beh-card-icon">⚠️</span>
+      <div>
+        <div class="beh-card-title">Alunos Irregulares <span class="beh-count-badge beh-badge-irr">${irregulares.length}</span></div>
+        <div class="beh-card-sub">Frequentam, mas com baixa presença — vêm esporadicamente e somem</div>
+      </div>
+    </div>
+    <div class="beh-list">${irregularesHTML}</div>
+  </div>
+
+  <!-- ALERTA CONSECUTIVAS -->
   <div class="resumo-layout">
     <div class="resumo-card">
-      <h4>📈 Faltas por Aluno (Top 10)</h4>
+      <h4>🚨 Faltas Consecutivas Agora (5+)</h4>
+      <div class="alert-list">${alertHTML}</div>
+    </div>
+    <div class="resumo-card">
+      <h4>📊 Distribuição de Frequência</h4>
+      <div class="chart-wrap" style="height:160px"><canvas id="${freqDistId}"></canvas></div>
+    </div>
+  </div>
+
+  <!-- ASSÍDUOS -->
+  <div class="resumo-card beh-card-assiduo" style="margin-bottom:18px;">
+    <div class="beh-card-header">
+      <span class="beh-card-icon">🌟</span>
+      <div>
+        <div class="beh-card-title">Alunos Assíduos <span class="beh-count-badge beh-badge-ok">${assíduos.length}</span></div>
+        <div class="beh-card-sub">Frequência ≥ 75% — comparecem com regularidade</div>
+      </div>
+    </div>
+    <div class="beh-list">${assíduosHTML}</div>
+  </div>
+
+  <!-- NUNCA VIERAM -->
+  <div class="resumo-card" style="margin-bottom:18px;border-top:3px solid var(--border);">
+    <div class="beh-card-header">
+      <span class="beh-card-icon">🚫</span>
+      <div>
+        <div class="beh-card-title" style="color:var(--text-muted)">Nunca Compareceram <span class="beh-count-badge" style="background:var(--surface2);color:var(--text-muted)">${nuncaVieram.length}</span></div>
+        <div class="beh-card-sub">0 presenças registradas — geralmente decisão familiar</div>
+      </div>
+    </div>
+    <div class="beh-list">${nuncaVieramHTML}</div>
+  </div>
+
+  <!-- CHARTS ROW -->
+  <div class="resumo-layout">
+    <div class="resumo-card">
+      <h4>📈 Faltas × Presenças (Top irregulares)</h4>
       <div class="chart-wrap"><canvas id="${chartId}"></canvas></div>
     </div>
     <div class="resumo-card">
-      <h4>🍩 Distribuição de Presenças</h4>
+      <h4>🍩 Total Geral de Registros</h4>
       <div class="donut-wrap"><canvas id="${donutId}" style="max-width:160px;max-height:160px;"></canvas></div>
       <div class="legend-row">
         <div class="legend-dot"><span style="background:var(--present)"></span> Presentes (${totalP})</div>
@@ -2061,45 +2587,22 @@ function renderResumo(year) {
         <div class="legend-dot"><span style="background:var(--justified)"></span> Justif. (${totalJ})</div>
       </div>
     </div>
-  </div>
-
-  <div class="resumo-layout">
-    <div class="resumo-card">
-      <h4>🚨 Alunos em Alerta (5+ faltas consecutivas)</h4>
-      <div class="alert-list">${alertHTML}</div>
-    </div>
-    <div class="resumo-card">
-      <h4>🔔 Convocados × Não Convocados</h4>
-      <div style="display:flex;gap:18px;align-items:center;margin-top:8px;">
-        <div class="kpi-box" style="flex:1">
-          <span class="kpi-num" style="color:var(--accent)">${nConv}</span>
-          <span class="kpi-lbl">Convocados</span>
-        </div>
-        <div class="kpi-box" style="flex:1">
-          <span class="kpi-num" style="color:var(--text-muted)">${nNao}</span>
-          <span class="kpi-lbl">Não Convocados</span>
-        </div>
-        <div class="kpi-box" style="flex:1">
-          <span class="kpi-num" style="color:var(--absent)">${alertStudents.length}</span>
-          <span class="kpi-lbl">Em Alerta</span>
-        </div>
-      </div>
-    </div>
   </div>`;
 
-  // Defer chart rendering after DOM update
+  // Chart rendering
   setTimeout(() => {
-    // Bar chart — top faltas
+    // Bar chart — irregulares sorted by pct asc, top 10 worst
+    const topIrr = [...irregulares].slice(0, 10);
     const barCtx = document.getElementById(chartId);
-    if (barCtx && topFaltas.length > 0) {
+    if (barCtx && topIrr.length > 0) {
       if (barCtx._chartInst) barCtx._chartInst.destroy();
       barCtx._chartInst = new Chart(barCtx, {
         type: 'bar',
         data: {
-          labels: topFaltas.map(x => x.name),
+          labels: topIrr.map(x => shortName(x.s.name)),
           datasets: [
-            { label: 'Faltas', data: topFaltas.map(x => x.stats.absences), backgroundColor: '#fceaea', borderColor: '#d96b6b', borderWidth: 1.5, borderRadius: 4 },
-            { label: 'Presenças', data: topFaltas.map(x => x.stats.present), backgroundColor: '#e6f5ee', borderColor: '#4a9b72', borderWidth: 1.5, borderRadius: 4 },
+            { label: 'Faltas', data: topIrr.map(x => x.st.absences), backgroundColor: '#fceaea', borderColor: '#d96b6b', borderWidth: 1.5, borderRadius: 4 },
+            { label: 'Presenças', data: topIrr.map(x => x.st.present), backgroundColor: '#e6f5ee', borderColor: '#4a9b72', borderWidth: 1.5, borderRadius: 4 },
           ]
         },
         options: {
@@ -2124,6 +2627,33 @@ function renderResumo(year) {
           responsive: true, maintainAspectRatio: true,
           plugins: { legend: { display: false } },
           cutout: '68%'
+        }
+      });
+    }
+
+    // Frequency distribution bar chart
+    const freqDistCtx = document.getElementById(freqDistId);
+    if (freqDistCtx) {
+      if (freqDistCtx._chartInst) freqDistCtx._chartInst.destroy();
+      freqDistCtx._chartInst = new Chart(freqDistCtx, {
+        type: 'bar',
+        data: {
+          labels: Object.keys(buckets),
+          datasets: [{
+            data: Object.values(buckets),
+            backgroundColor: ['#d96b6b','#e8967a','#c49a3c','#a8be5e','#4a9b72','#2d7a57'],
+            borderRadius: 5, borderWidth: 0
+          }]
+        },
+        options: {
+          responsive: true, maintainAspectRatio: false,
+          plugins: { legend: { display: false },
+            tooltip: { callbacks: { label: ctx => ` ${ctx.raw} aluno${ctx.raw!==1?'s':''}` } }
+          },
+          scales: {
+            x: { grid: { display: false } },
+            y: { beginAtZero: true, ticks: { stepSize: 1 } }
+          }
         }
       });
     }
@@ -2788,7 +3318,7 @@ Object.assign(window, {
   setStatus, markAllPresent, markAllAbsent, clearChamada,
   changeDate, filterStudents,
   retornarDesistente,
-  exportRelatorio, showToast
+  exportRelatorio, printRegistroGeral, showToast
 });
 
 // Registra o Service Worker para PWA
