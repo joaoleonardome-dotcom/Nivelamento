@@ -1714,10 +1714,7 @@ function renderStudentCards(year, students) {
     const pct = stats.total > 0 ? Math.round(stats.present / stats.total * 100) : null;
     const convocado = s.convocado !== 'nao';
     const freqColor = pct === null ? 'var(--text-muted)' : pct >= 75 ? 'var(--present)' : pct >= 50 ? 'var(--justified)' : 'var(--absent)';
-    const isPairing = (year === 6 || year === 7 || year === 8 || year === 9) && convocado;
-    const pairingBadge = isPairing
-      ? `<div style="font-size:0.7rem;color:var(--accent);margin-top:1px;">${(year === 6 || year === 7) ? 'regra seg+ter / qua+sex' : 'regra seg+ter'}</div>`
-      : '';
+    const pairingBadge = '';
     return `
     <tr onclick="openDetail(${year},'${s.id}')">
       <td class="sl-num">${idx + 1}</td>
@@ -1840,25 +1837,12 @@ function collapsePair(entries, dowA, dowB, pairLabel) {
   return collapsed.sort((a,b) => a.date.localeCompare(b.date));
 }
 
-// Returns effective stats applying the pairing rules per year/convocado:
-//   6º/7º convocados → pair1: Mon+Tue (dow 1+2), pair2: Wed+Fri (dow 3+5)
-//   8º/9º convocados → pair1: Mon+Tue (dow 1+2) only
-//   others           → raw records unchanged
+// Retorna todas as entradas brutas do aluno — cada presença conta individualmente,
+// sem agrupamento por par de dias.
 function getStudentStatsEffective(year, sid, student) {
   const raw = getStudentEntries(year, sid);
-  const isConvocado = student && student.convocado !== 'nao';
 
   let entries = raw;
-  if (isConvocado) {
-    if (year === 8 || year === 9) {
-      // Single pair: Mon+Tue
-      entries = collapsePair(raw, 1, 2, 'seg-ter');
-    } else if (year === 6 || year === 7) {
-      // Two independent pairs: Mon+Tue and Wed+Fri
-      const afterPair1 = collapsePair(raw, 1, 2, 'seg-ter');
-      entries = collapsePair(afterPair1, 3, 5, 'qua-sex');
-    }
-  }
 
   let present=0, absences=0, justified=0, total=0;
   const absenceDates = [];
@@ -1903,7 +1887,7 @@ function setStatus(year, sid, status) {
   const moved = checkAndMoveDesistentes(year);
   save();
   renderPanel(year);
-  if (moved) showToast('⚠ Aluno(s) movido(s) para Desistentes (4+ faltas consecutivas).');
+  if (moved) showToast('⚠ Aluno(s) movido(s) para Desistentes (8+ faltas consecutivas).');
 }
 
 function changeDate(year, val) {
@@ -2363,13 +2347,13 @@ function getDesistentes(year) {
   return (state.students[year] || []).filter(s => s.desistente === true);
 }
 
-// Verifica e move automaticamente alunos com 4+ faltas F consecutivas para desistentes
+// Verifica e move automaticamente alunos com 8+ faltas F consecutivas para desistentes
 function checkAndMoveDesistentes(year) {
   let moved = false;
   state.students[year].forEach(s => {
     if (s.convocado === 'nao' || s.desistente) return;
     const consec = getConsecutiveFaltasConvocado(year, s.id);
-    if (consec >= 4) {
+    if (consec >= 8) {
       s.desistente = true;
       s.desistenteDate = today();
       s.desistenteFaltas = consec;
@@ -2382,15 +2366,35 @@ function checkAndMoveDesistentes(year) {
 function retornarDesistente(year, sid) {
   const s = state.students[year].find(x => x.id === sid);
   if (!s) return;
+
+  // Descobre a data em que o aluno virou desistente
+  const dataDesistencia = s.desistenteDate || today();
+
+  // Coleta todas as datas em que houve chamada para este ano enquanto era desistente
+  const datasComChamada = new Set(
+    Object.keys(state.records)
+      .filter(k => { const p = k.split('_'); return parseInt(p[1]) === year; })
+      .map(k => k.split('_')[0])
+      .filter(d => d >= dataDesistencia && d < today())
+  );
+
+  // Para cada data com chamada, registra F se não houver registro do aluno
+  datasComChamada.forEach(d => {
+    const k = `${d}_${year}_${sid}`;
+    if (!state.records[k]) {
+      state.records[k] = 'F';
+    }
+  });
+
   // Marca presença na data atual e remove o status de desistente
-  const key = `${today()}_${year}_${sid}`;
-  state.records[key] = 'P';
+  const keyHoje = `${today()}_${year}_${sid}`;
+  state.records[keyHoje] = 'P';
   s.desistente = false;
   delete s.desistenteDate;
   delete s.desistenteFaltas;
   save();
   renderPanel(year);
-  showToast(`✅ ${s.name} retornou à chamada!`);
+  showToast(`\u2705 ${s.name} retornou à chamada com faltas preenchidas!`);
 }
 
 function renderDesistentes(year) {
@@ -2419,7 +2423,7 @@ function renderDesistentes(year) {
     <div class="desistentes-header">
       <span class="desistentes-title">🚪 Alunos Desistentes</span>
       ${lista.length > 0 ? `<span class="desistentes-count">${lista.length} aluno(s)</span>` : ''}
-      <span class="desistentes-info">Convocados com 4+ faltas consecutivas · ao marcar presença, retornam à chamada</span>
+      <span class="desistentes-info">Convocados com 8+ faltas consecutivas · ao marcar presença, retornam à chamada</span>
     </div>
     <div class="desistentes-list">${listHTML}</div>
   </div>`;
@@ -3003,11 +3007,9 @@ function openDetail(year, sid) {
   const stats = getStudentStatsEffective(year, sid, s);
   const color = yearColors[year];
   const pct = stats.total > 0 ? Math.round(stats.present/stats.total*100) : '-';
-  const isPairing = (year === 6 || year === 7 || year === 8 || year === 9) && s.convocado !== 'nao';
-  const pairingLabel = (year === 6 || year === 7) ? '📅 Regra Seg+Ter / Qua+Sex' : '📅 Regra Seg+Ter';
-  const pairingNote  = (year === 6 || year === 7)
-    ? 'Contagem por semana: seg+ter = 1 chamada · qua+sex = 1 chamada'
-    : 'Contagem por semana: segunda e terça valem juntas como 1 chamada';
+  const isPairing = false;
+  const pairingLabel = '';
+  const pairingNote  = '';
 
   document.getElementById('detailTitle').textContent = s.name;
 
