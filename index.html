@@ -1714,7 +1714,10 @@ function renderStudentCards(year, students) {
     const pct = stats.total > 0 ? Math.round(stats.present / stats.total * 100) : null;
     const convocado = s.convocado !== 'nao';
     const freqColor = pct === null ? 'var(--text-muted)' : pct >= 75 ? 'var(--present)' : pct >= 50 ? 'var(--justified)' : 'var(--absent)';
-    const pairingBadge = '';
+    const isPairing = (year === 6 || year === 7 || year === 8 || year === 9) && convocado;
+    const pairingBadge = isPairing
+      ? `<div style="font-size:0.7rem;color:var(--accent);margin-top:1px;">${(year === 6 || year === 7) ? 'regra seg+ter / qua+sex' : 'regra seg+ter'}</div>`
+      : '';
     return `
     <tr onclick="openDetail(${year},'${s.id}')">
       <td class="sl-num">${idx + 1}</td>
@@ -1837,12 +1840,25 @@ function collapsePair(entries, dowA, dowB, pairLabel) {
   return collapsed.sort((a,b) => a.date.localeCompare(b.date));
 }
 
-// Retorna todas as entradas brutas do aluno — cada presença conta individualmente,
-// sem agrupamento por par de dias.
+// Returns effective stats applying the pairing rules per year/convocado:
+//   6º/7º convocados → pair1: Mon+Tue (dow 1+2), pair2: Wed+Fri (dow 3+5)
+//   8º/9º convocados → pair1: Mon+Tue (dow 1+2) only
+//   others           → raw records unchanged
 function getStudentStatsEffective(year, sid, student) {
   const raw = getStudentEntries(year, sid);
+  const isConvocado = student && student.convocado !== 'nao';
 
   let entries = raw;
+  if (isConvocado) {
+    if (year === 8 || year === 9) {
+      // Single pair: Mon+Tue
+      entries = collapsePair(raw, 1, 2, 'seg-ter');
+    } else if (year === 6 || year === 7) {
+      // Two independent pairs: Mon+Tue and Wed+Fri
+      const afterPair1 = collapsePair(raw, 1, 2, 'seg-ter');
+      entries = collapsePair(afterPair1, 3, 5, 'qua-sex');
+    }
+  }
 
   let present=0, absences=0, justified=0, total=0;
   const absenceDates = [];
@@ -3007,9 +3023,11 @@ function openDetail(year, sid) {
   const stats = getStudentStatsEffective(year, sid, s);
   const color = yearColors[year];
   const pct = stats.total > 0 ? Math.round(stats.present/stats.total*100) : '-';
-  const isPairing = false;
-  const pairingLabel = '';
-  const pairingNote  = '';
+  const isPairing = (year === 6 || year === 7 || year === 8 || year === 9) && s.convocado !== 'nao';
+  const pairingLabel = (year === 6 || year === 7) ? '📅 Regra Seg+Ter / Qua+Sex' : '📅 Regra Seg+Ter';
+  const pairingNote  = (year === 6 || year === 7)
+    ? 'Contagem por semana: seg+ter = 1 chamada · qua+sex = 1 chamada'
+    : 'Contagem por semana: segunda e terça valem juntas como 1 chamada';
 
   document.getElementById('detailTitle').textContent = s.name;
 
