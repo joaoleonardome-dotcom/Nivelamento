@@ -752,6 +752,15 @@
     .detail-stats { grid-template-columns: repeat(3,1fr); }
   }
 
+  .chamada-row .row-name:hover {
+    color: var(--accent);
+    text-decoration: underline;
+  }
+  .beh-name:hover, .desistente-name:hover, .alert-name:hover {
+    color: var(--accent) !important;
+    text-decoration: underline;
+  }
+
   /* ---- IMPORT EXCEL ---- */
   .import-tabs { display: flex; border-bottom: 1.5px solid var(--border); margin-bottom: 20px; }
   .import-tab {
@@ -1566,7 +1575,7 @@ function buildRow(s, globalIdx, year, date, isNao) {
   return `
   <div class="chamada-row status-${status}" style="${naoBg}">
     <span class="row-num">${globalIdx + 1}</span>
-    <span class="row-name">${s.name}</span>
+    <span class="row-name" style="cursor:pointer;" onclick="openDetail(${year},'${s.id}')">${s.name}</span>
     ${s.serie || s.turma ? `<span class="row-meta">${s.serie||''}${s.turma ? ' – '+s.turma : ''}</span>` : ''}
     <div class="status-btns">${btns}</div>
   </div>`;
@@ -1579,6 +1588,7 @@ function renderAll() {
 
 let activeSubTab = { 6: 'chamada', 7: 'chamada', 8: 'chamada', 9: 'chamada' };
 let rgFilter = { 6: 'conv', 7: 'conv', 8: 'conv', 9: 'conv' }; // 'conv' | 'nao' | 'todos'
+let alunosFilter = { 6: 'todos', 7: 'todos', 8: 'todos', 9: 'todos' }; // 'conv' | 'nao' | 'todos'
 
 function switchSubTab(year, tab) {
   activeSubTab[year] = tab;
@@ -1678,6 +1688,11 @@ function renderPanel(year) {
     </div>` : sub === 'resumo' ? renderResumo(year) : sub === 'registro' ? renderRegistroGeral(year) : sub === 'desistentes' ? renderDesistentes(year) : `
     <div class="student-list-header">
       <span style="font-size:0.82rem;font-weight:700;text-transform:uppercase;letter-spacing:0.06em;color:var(--text-muted)">Alunos Cadastrados</span>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <button id="af-${year}-todos" class="rg-filter-btn ${alunosFilter[year]==='todos'?'active':''}" onclick="setAlunosFilter(${year},'todos')">Todos (${students.filter(s=>!isDesistente(year,s.id)).length})</button>
+        <button id="af-${year}-conv"  class="rg-filter-btn ${alunosFilter[year]==='conv' ?'active':''}" onclick="setAlunosFilter(${year},'conv')">🔔 Convocados (${students.filter(s=>s.convocado!=='nao'&&!isDesistente(year,s.id)).length})</button>
+        <button id="af-${year}-nao"   class="rg-filter-btn ${alunosFilter[year]==='nao'  ?'active':''}" onclick="setAlunosFilter(${year},'nao')">Não Convocados (${students.filter(s=>s.convocado==='nao'&&!isDesistente(year,s.id)).length})</button>
+      </div>
       <input type="text" class="search-input" placeholder="🔍 Buscar aluno..." onInput="filterStudents(${year}, this.value)" id="search-${year}">
     </div>
     <div class="students-list-wrap">
@@ -1760,8 +1775,23 @@ function renderStudentCards(year, students) {
   }).join('');
 }
 
+function setAlunosFilter(year, val) {
+  alunosFilter[year] = val;
+  const query = document.getElementById(`search-${year}`)?.value || '';
+  filterStudents(year, query);
+  // Update filter button styles
+  ['todos','conv','nao'].forEach(v => {
+    const btn = document.getElementById(`af-${year}-${v}`);
+    if (btn) btn.classList.toggle('active', v === val);
+  });
+}
+
 function filterStudents(year, query) {
-  const students = state.students[year].filter(s => s.name.toLowerCase().includes(query.toLowerCase()));
+  const filt = alunosFilter[year] || 'todos';
+  let students = state.students[year];
+  if (filt === 'conv') students = students.filter(s => s.convocado !== 'nao');
+  else if (filt === 'nao') students = students.filter(s => s.convocado === 'nao');
+  if (query) students = students.filter(s => s.name.toLowerCase().includes(query.toLowerCase()));
   document.getElementById(`students-grid-${year}`).innerHTML = renderStudentCards(year, students);
 }
 
@@ -2426,7 +2456,7 @@ function renderDesistentes(year) {
         <div class="desistente-row">
           <div class="desistente-initials">${initials(s.name)}</div>
           <div class="desistente-info-col">
-            <div class="desistente-name">${s.name}</div>
+            <div class="desistente-name" style="cursor:pointer;" onclick="openDetail(${year},'${s.id}')">${s.name}</div>
             <div class="desistente-meta">⚠ ${consec} falta(s) consecutiva(s)${dataStr}${s.serie ? ` · ${s.serie}` : ''}${s.turma ? ` – ${s.turma}` : ''}</div>
           </div>
           <span class="desistente-badge">Desistente</span>
@@ -2563,7 +2593,7 @@ function renderResumo(year) {
     : alertStudents.map(({s, consec}) => `
         <div class="alert-item">
           <div class="sl-initials" style="background:${color};width:32px;height:32px;font-size:0.75rem;">${initials(s.name)}</div>
-          <span class="alert-name">${s.name}</span>
+          <span class="alert-name" style="cursor:pointer;" onclick="openDetail(${year},'${s.id}')">${s.name}</span>
           <span class="alert-count">⚠ ${consec} consecutiva${consec>1?'s':''}</span>
         </div>`).join('');
 
@@ -2577,7 +2607,7 @@ function renderResumo(year) {
       <div class="beh-row">
         <div class="sl-initials" style="background:${color};width:32px;height:32px;font-size:0.75rem;flex-shrink:0;">${initials(s.name)}</div>
         <div class="beh-info">
-          <div class="beh-name">${s.name}</div>
+          <div class="beh-name" style="cursor:pointer;" onclick="openDetail(${year},'${s.id}')">${s.name}</div>
           <div class="beh-meta">
             <span class="beh-chip beh-chip-f">✗ ${st.absences} faltas</span>
             <span class="beh-chip beh-chip-p">✓ ${st.present} pres.</span>
@@ -2599,7 +2629,7 @@ function renderResumo(year) {
       <div class="beh-row beh-row-ok">
         <div class="sl-initials" style="background:${color};width:32px;height:32px;font-size:0.75rem;flex-shrink:0;">${initials(s.name)}</div>
         <div class="beh-info">
-          <div class="beh-name">${s.name}</div>
+          <div class="beh-name" style="cursor:pointer;" onclick="openDetail(${year},'${s.id}')">${s.name}</div>
           <div class="beh-meta">
             <span class="beh-chip beh-chip-p">✓ ${st.present} presenças</span>
             ${st.absences > 0 ? `<span class="beh-chip beh-chip-f-sm">✗ ${st.absences} falta${st.absences>1?'s':''}</span>` : '<span class="beh-chip beh-chip-perfect">★ sem faltas</span>'}
@@ -2626,7 +2656,7 @@ function renderResumo(year) {
         <div class="beh-row beh-row-nunca">
           <div class="sl-initials" style="background:#b0bec5;width:32px;height:32px;font-size:0.75rem;flex-shrink:0;">${initials(x.s.name)}</div>
           <div class="beh-info">
-            <div class="beh-name" style="color:var(--text-muted)">${x.s.name}</div>
+            <div class="beh-name" style="color:var(--text-muted);cursor:pointer;" onclick="openDetail(${year},'${x.s.id}')">${x.s.name}</div>
             <div class="beh-meta"><span class="beh-chip beh-chip-f">✗ ${x.st.absences} faltas registradas</span></div>
           </div>
           <div class="beh-pct" style="color:var(--absent)">0%</div>
@@ -3041,12 +3071,6 @@ function openDetail(year, sid) {
   let calYear  = now.getFullYear();
   let calMonth = now.getMonth(); // 0-indexed
 
-  if (allDates.length > 0) {
-    const last = allDates[allDates.length - 1];
-    calYear  = parseInt(last.split('-')[0]);
-    calMonth = parseInt(last.split('-')[1]) - 1;
-  }
-
   detailCalState = { year, sid, calYear, calMonth };
 
   const obsHTML = (!s.obs || s.obs.length === 0)
@@ -3460,7 +3484,7 @@ updateHeaderDate();
 
 // Expõe funções ao escopo global (necessário com type="module")
 Object.assign(window, {
-  switchTab, switchSubTab, setRgFilter,
+  switchTab, switchSubTab, setRgFilter, setAlunosFilter,
   openAddModal, confirmAddStudent, switchImportTab, downloadTemplate,
   handleFileSelect, clearImport, confirmImport,
   closeModal, openObsModal, saveObs,
