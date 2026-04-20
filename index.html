@@ -113,10 +113,10 @@
   .risk-badge {
     display: inline-flex;
     align-items: center;
-    gap: 4px;
-    font-size: 0.7rem;
+    gap: 3px;
+    font-size: 0.62rem;
     font-weight: 700;
-    padding: 2px 8px;
+    padding: 1px 6px;
     border-radius: 50px;
     white-space: nowrap;
   }
@@ -1782,9 +1782,11 @@ function buildRow(s, globalIdx, year, date, isNao) {
   return `
   <div class="chamada-row status-${status}" style="${naoBg}" data-year="${year}" data-sid="${s.id}" data-isnao="${isNao}">
     <span class="row-num">${globalIdx + 1}</span>
-    <span class="row-name" style="cursor:pointer;" onclick="openDetail(${year},'${s.id}')">${s.name}</span>
+    <div style="display:flex;flex-direction:column;gap:2px;min-width:0;">
+      <span class="row-name" style="cursor:pointer;" onclick="openDetail(${year},'${s.id}')">${s.name}</span>
+      ${riskBadge ? `<span style="display:inline-flex;">${riskBadge}</span>` : ''}
+    </div>
     ${s.serie || s.turma ? `<span class="row-meta">${s.serie||''}${s.turma ? ' – '+s.turma : ''}</span>` : ''}
-    ${riskBadge}
     <div style="display:flex;align-items:center;gap:6px;margin-left:auto;">
       ${obsBtn}
       <div class="status-btns">${btns}</div>
