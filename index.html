@@ -125,6 +125,61 @@
   body.dark-mode .risk-high { background: var(--absent-bg); border-color: #5a2020; }
   body.dark-mode .risk-med  { background: #2a1e10; border-color: #5a3010; }
 
+  /* ---- SEMESTER CALENDAR GRID ---- */
+  .sem-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 14px;
+    margin-bottom: 10px;
+  }
+  @media (max-width: 700px) {
+    .sem-grid { grid-template-columns: repeat(2, 1fr); }
+  }
+  @media (max-width: 460px) {
+    .sem-grid { grid-template-columns: 1fr; }
+  }
+  .sem-month-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    padding: 10px 10px 8px;
+  }
+  .sem-month-name {
+    font-size: 0.78rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+  .sem-month-chips {
+    display: flex;
+    gap: 3px;
+    flex-wrap: wrap;
+    margin-bottom: 5px;
+  }
+  .sem-month-block .freq-cal-grid {
+    gap: 2px;
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+  .sem-month-block .freq-day {
+    width: auto;
+    height: auto;
+    aspect-ratio: 1;
+    min-width: 0;
+    font-size: clamp(0.48rem, 1.5vw, 0.62rem);
+    border-radius: 4px;
+  }
+  .sem-month-block .freq-cal-weekdays {
+    grid-template-columns: repeat(7, minmax(0, 1fr));
+  }
+  .sem-month-block .freq-cal-weekdays span {
+    width: auto;
+    min-width: 0;
+    font-size: clamp(0.44rem, 1.4vw, 0.58rem);
+    overflow: hidden;
+  }
+
   /* ---- QUICK OBS IN CHAMADA ---- */
   .quick-obs-wrap {
     display: none;
@@ -3455,7 +3510,8 @@ function openDetail(year, sid) {
   let calYear  = now.getFullYear();
   let calMonth = now.getMonth(); // 0-indexed
 
-  detailCalState = { year, sid, calYear, calMonth };
+  const calSemester = now.getMonth() < 6 ? 0 : 1;
+  detailCalState = { year, sid, calYear, calSemester };
 
   const obsHTML = (!s.obs || s.obs.length === 0)
     ? '<div class="empty-state" style="padding:16px 0"><div class="icon">💬</div>Nenhuma observação.</div>'
@@ -3510,7 +3566,7 @@ function openDetail(year, sid) {
 }
 
 function renderDetailCalendar() {
-  const { year, sid, calYear, calMonth } = detailCalState;
+  const { year, sid, calYear, calSemester } = detailCalState;
   const container = document.getElementById('freqCalendarContainer');
   if (!container) return;
 
@@ -3523,83 +3579,95 @@ function renderDetailCalendar() {
     }
   });
 
-  const today = new Date();
-  const firstDay = new Date(calYear, calMonth, 1);
-  const daysInMonth = new Date(calYear, calMonth + 1, 0).getDate();
-  const startDow = firstDay.getDay(); // 0=Sun
-
+  const todayDate = new Date();
   const monthNames = ['Janeiro','Fevereiro','Março','Abril','Maio','Junho','Julho','Agosto','Setembro','Outubro','Novembro','Dezembro'];
   const weekDays = ['D','S','T','Q','Q','S','S'];
 
-  // Determine bounds: earliest and latest months with any record
+  // Semester 0 = Jan-Jun, Semester 1 = Jul-Dez
+  const startMonth = calSemester === 0 ? 0 : 6;
+  const endMonth   = calSemester === 0 ? 5 : 11;
+  const semLabel   = calSemester === 0 ? `1º Semestre ${calYear}` : `2º Semestre ${calYear}`;
+
+  // Determine bounds for nav
   const allDateKeys = Object.keys(recordMap).sort();
-  let minYear = calYear, minMonth = calMonth;
-  let maxYear = today.getFullYear(), maxMonth = today.getMonth();
+  let minYear = calYear, minSem = calSemester;
+  const maxYear = todayDate.getFullYear();
+  const maxSem  = todayDate.getMonth() < 6 ? 0 : 1;
   if (allDateKeys.length > 0) {
     const first = allDateKeys[0].split('-');
-    minYear = parseInt(first[0]); minMonth = parseInt(first[1]) - 1;
+    minYear = parseInt(first[0]);
+    minSem  = parseInt(first[1]) - 1 < 6 ? 0 : 1;
   }
 
-  const isPrevDisabled = (calYear < minYear) || (calYear === minYear && calMonth <= minMonth);
-  const isNextDisabled = (calYear > maxYear) || (calYear === maxYear && calMonth >= maxMonth);
+  const isPrevDisabled = calYear < minYear || (calYear === minYear && calSemester <= minSem);
+  const isNextDisabled = calYear > maxYear || (calYear === maxYear && calSemester >= maxSem);
 
-  // Month stats
-  let mP=0, mF=0, mJ=0;
-  for (let d=1; d<=daysInMonth; d++) {
-    const key = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const v = recordMap[key];
-    if (v==='P') mP++; else if (v==='F') mF++; else if (v==='J') mJ++;
-  }
-  const mTotal = mP + mF + mJ;
-  const mPct = mTotal > 0 ? Math.round(mP / mTotal * 100) : null;
+  // Build one mini-calendar per month in the semester
+  let calendarsHTML = '';
+  let totalP=0, totalF=0, totalJ=0;
 
-  // Build day cells
-  let cells = '';
-  // Empty slots before first day
-  for (let i=0; i<startDow; i++) cells += `<div class="freq-day freq-day-empty"></div>`;
+  for (let m = startMonth; m <= endMonth; m++) {
+    const daysInMonth = new Date(calYear, m + 1, 0).getDate();
+    const startDow    = new Date(calYear, m, 1).getDay();
 
-  for (let d=1; d<=daysInMonth; d++) {
-    const dateStr = `${calYear}-${String(calMonth+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
-    const cellDate = new Date(calYear, calMonth, d);
-    const isFuture = cellDate > today;
-    const v = recordMap[dateStr];
-    let cls, title;
-    if (isFuture) {
-      cls = 'freq-day-future'; title = '';
-    } else if (!v) {
-      cls = 'freq-day-none'; title = 'Sem registro';
-    } else if (v === 'P') {
-      cls = 'freq-day-P'; title = 'Presente';
-    } else if (v === 'F') {
-      cls = 'freq-day-F'; title = 'Falta';
-    } else {
-      cls = 'freq-day-J'; title = 'Justificada';
+    let mP=0, mF=0, mJ=0;
+    let cells = '';
+    for (let i=0; i<startDow; i++) cells += `<div class="freq-day freq-day-empty"></div>`;
+    for (let d=1; d<=daysInMonth; d++) {
+      const dateStr  = `${calYear}-${String(m+1).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+      const cellDate = new Date(calYear, m, d);
+      const isFuture = cellDate > todayDate;
+      const v = recordMap[dateStr];
+      let cls, title;
+      if (isFuture)  { cls='freq-day-future'; title=''; }
+      else if (!v)   { cls='freq-day-none';   title='Sem registro'; }
+      else if (v==='P') { cls='freq-day-P'; title='Presente';    mP++; }
+      else if (v==='F') { cls='freq-day-F'; title='Falta';       mF++; }
+      else              { cls='freq-day-J'; title='Justificada'; mJ++; }
+      cells += `<div class="freq-day ${cls}" title="${title ? d+' — '+title : d}">${d}</div>`;
     }
-    cells += `<div class="freq-day ${cls}" title="${title ? d + ' — ' + title : d}">${d}</div>`;
+    totalP+=mP; totalF+=mF; totalJ+=mJ;
+    const mTotal = mP+mF+mJ;
+    const mPct   = mTotal > 0 ? Math.round(mP/mTotal*100) : null;
+
+    calendarsHTML += `
+      <div class="sem-month-block">
+        <div class="sem-month-name">${monthNames[m]}</div>
+        ${mTotal > 0 ? `<div class="sem-month-chips">
+          <span class="freq-cal-chip freq-chip-p">✓${mP}</span>
+          <span class="freq-cal-chip freq-chip-f">✗${mF}</span>
+          ${mJ>0?`<span class="freq-cal-chip freq-chip-j">⚠${mJ}</span>`:''}
+          ${mPct!==null?`<span class="freq-cal-chip freq-chip-pct">${mPct}%</span>`:''}
+        </div>` : `<div style="font-size:0.7rem;color:var(--text-muted);margin-bottom:4px;">Sem registros</div>`}
+        <div class="freq-cal-weekdays">${weekDays.map(w=>`<span>${w}</span>`).join('')}</div>
+        <div class="freq-cal-grid">${cells}</div>
+      </div>`;
   }
 
-  const statsHTML = mTotal > 0 ? `
-    <div class="freq-cal-month-stats">
-      <span class="freq-cal-chip freq-chip-p">✓ ${mP} pres.</span>
-      <span class="freq-cal-chip freq-chip-f">✗ ${mF} falt.</span>
-      ${mJ > 0 ? `<span class="freq-cal-chip freq-chip-j">⚠ ${mJ} just.</span>` : ''}
-      ${mPct !== null ? `<span class="freq-cal-chip freq-chip-pct">${mPct}% freq.</span>` : ''}
-    </div>` : `<div style="font-size:0.78rem;color:var(--text-muted);padding-bottom:10px;">Nenhum registro neste mês.</div>`;
+  const semTotal = totalP+totalF+totalJ;
+  const semPct   = semTotal > 0 ? Math.round(totalP/semTotal*100) : null;
+  const semStats = semTotal > 0 ? `
+    <div class="freq-cal-month-stats" style="margin-bottom:14px;">
+      <span style="font-size:0.78rem;font-weight:700;color:var(--text-muted);margin-right:4px;">Total do semestre:</span>
+      <span class="freq-cal-chip freq-chip-p">✓ ${totalP} pres.</span>
+      <span class="freq-cal-chip freq-chip-f">✗ ${totalF} falt.</span>
+      ${totalJ>0?`<span class="freq-cal-chip freq-chip-j">⚠ ${totalJ} just.</span>`:''}
+      ${semPct!==null?`<span class="freq-cal-chip freq-chip-pct">${semPct}% freq.</span>`:''}
+    </div>` : '';
 
   container.innerHTML = `
     <div class="freq-calendar-wrap">
       <div class="freq-cal-header">
-        <span class="freq-cal-title">${monthNames[calMonth]} ${calYear}</span>
+        <span class="freq-cal-title">${semLabel}</span>
         <div class="freq-cal-nav">
-          <button onclick="detailCalNav(-1)" ${isPrevDisabled?'disabled':''}title="Mês anterior">‹</button>
-          <span class="freq-cal-month-chip">${monthNames[calMonth].substring(0,3)} ${calYear}</span>
-          <button onclick="detailCalNav(1)" ${isNextDisabled?'disabled':''}title="Próximo mês">›</button>
+          <button onclick="detailCalNav(-1)" ${isPrevDisabled?'disabled':''}title="Semestre anterior">‹</button>
+          <span class="freq-cal-month-chip">${calSemester===0?'Jan–Jun':'Jul–Dez'} ${calYear}</span>
+          <button onclick="detailCalNav(1)" ${isNextDisabled?'disabled':''}title="Próximo semestre">›</button>
         </div>
       </div>
       <div class="freq-cal-body">
-        ${statsHTML}
-        <div class="freq-cal-weekdays">${weekDays.map(w=>`<span>${w}</span>`).join('')}</div>
-        <div class="freq-cal-grid">${cells}</div>
+        ${semStats}
+        <div class="sem-grid">${calendarsHTML}</div>
       </div>
       <div class="freq-cal-legend">
         <div class="freq-cal-legend-item"><div class="freq-cal-legend-dot" style="background:var(--present-bg);border:1.5px solid #a8d8bc;"></div> Presente</div>
@@ -3611,12 +3679,12 @@ function renderDetailCalendar() {
 }
 
 function detailCalNav(dir) {
-  let { calYear, calMonth } = detailCalState;
-  calMonth += dir;
-  if (calMonth < 0) { calMonth = 11; calYear--; }
-  if (calMonth > 11) { calMonth = 0; calYear++; }
-  detailCalState.calYear  = calYear;
-  detailCalState.calMonth = calMonth;
+  let { calYear, calSemester } = detailCalState;
+  calSemester += dir;
+  if (calSemester < 0) { calSemester = 1; calYear--; }
+  if (calSemester > 1) { calSemester = 0; calYear++; }
+  detailCalState.calYear     = calYear;
+  detailCalState.calSemester = calSemester;
   renderDetailCalendar();
 }
 
